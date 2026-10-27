@@ -1,0 +1,482 @@
+{
+  "schema_version": 1,
+  "method": "12pt textbook body, two-character first-line indent; original text preserved",
+  "texts": {
+    "textbook-quanxue": {
+      "starts": [
+        0,
+        10,
+        97,
+        205
+      ],
+      "text_sha256": "6a32a7208fa5e2b183903daba023024ff946811bc3098af267317c620e684d67",
+      "source_sha256": "645cf8c0b77319f0ab3ea328e0ac315dee9e784f6ae525acbac5859ba705d6a3",
+      "pages": [
+        91,
+        92
+      ]
+    },
+    "textbook-shishuo": {
+      "starts": [
+        0,
+        131,
+        419,
+        501
+      ],
+      "text_sha256": "4f8ac5dce4ccadf26df171137529b7d54264ed107862472de532af5b7b2a8f16",
+      "source_sha256": "645cf8c0b77319f0ab3ea328e0ac315dee9e784f6ae525acbac5859ba705d6a3",
+      "pages": [
+        92,
+        94
+      ]
+    },
+    "textbook-chibi-fu": {
+      "starts": [
+        0,
+        124,
+        223,
+        442,
+        608
+      ],
+      "text_sha256": "8c03662a96b7f11acd9766bf76e930288fe5c25df637c7e4dd82c1105c593229",
+      "source_sha256": "645cf8c0b77319f0ab3ea328e0ac315dee9e784f6ae525acbac5859ba705d6a3",
+      "pages": [
+        125,
+        127
+      ]
+    },
+    "textbook-dengtaishan-ji": {
+      "starts": [
+        0,
+        56,
+        294,
+        409,
+        469,
+        532
+      ],
+      "text_sha256": "c269d32fc672aa519f1ddcc9d6dbb07faf940d82be700dfe9b98fc288823551e",
+      "source_sha256": "645cf8c0b77319f0ab3ea328e0ac315dee9e784f6ae525acbac5859ba705d6a3",
+      "pages": [
+        127,
+        128
+      ]
+    },
+    "textbook-zilu-zengxi": {
+      "starts": [
+        0
+      ],
+      "text_sha256": "403d9599647235c26f7a404b773fd56d5a52d21d1942c781a35875ed1195c58a",
+      "source_sha256": "4fa5ce1f4a40848df32a822dee95e43486fa0a9f15185bcf7301fe06318bc5c4",
+      "pages": [
+        9,
+        10
+      ]
+    },
+    "textbook-qi-huan-jin-wen": {
+      "starts": [
+        0,
+        385,
+        443,
+        515,
+        565,
+        571,
+        648,
+        665,
+        1331,
+        1368
+      ],
+      "text_sha256": "4bed05b6a3460531be0d70ae3d25d1d908772cb18657c09a8b52fa372c7bedd8",
+      "source_sha256": "4fa5ce1f4a40848df32a822dee95e43486fa0a9f15185bcf7301fe06318bc5c4",
+      "pages": [
+        11,
+        14
+      ]
+    },
+    "textbook-paoding-jieniu": {
+      "starts": [
+        0,
+        62,
+        80,
+        339
+      ],
+      "text_sha256": "dee2b1385098c8abe5f5ef5aa002de788c0318b494bfcdf10154b857cd0b515b",
+      "source_sha256": "4fa5ce1f4a40848df32a822dee95e43486fa0a9f15185bcf7301fe06318bc5c4",
+      "pages": [
+        15,
+        16
+      ]
+    },
+    "textbook-zhuzhiwu": {
+      "starts": [
+        0,
+        31,
+        127,
+        316
+      ],
+      "text_sha256": "1e1f3f18192a97513bb66cfb97896cd1fd122c3a4617431b0f901e0f43fd50e8",
+      "source_sha256": "4fa5ce1f4a40848df32a822dee95e43486fa0a9f15185bcf7301fe06318bc5c4",
+      "pages": [
+        17,
+        18
+      ]
+    },
+    "textbook-hongmen-yan": {
+      "starts": [
+        0,
+        175,
+        684,
+        987,
+        1421,
+        1669,
+        1826
+      ],
+      "text_sha256": "4b1b0a7e1406111d9ccdb9089b069f1c128c7b8d624f700e3a0bbd4d2ed3693e",
+      "source_sha256": "4fa5ce1f4a40848df32a822dee95e43486fa0a9f15185bcf7301fe06318bc5c4",
+      "pages": [
+        20,
+        24
+      ]
+    },
+    "textbook-jianzhuke-shu": {
+      "starts": [
+        0,
+        286,
+        656,
+        802
+      ],
+      "text_sha256": "283ebfe1686c6988a857ea50afe10006afbd4db3b0f4bd128055b8fc3ba6b2db",
+      "source_sha256": "4fa5ce1f4a40848df32a822dee95e43486fa0a9f15185bcf7301fe06318bc5c4",
+      "pages": [
+        92,
+        94
+      ]
+    },
+    "textbook-yuqi-shu": {
+      "starts": [
+        0,
+        105,
+        286,
+        405,
+        636,
+        960,
+        1043,
+        1225
+      ],
+      "text_sha256": "7dbda9bd9ff7e99ac654c2202a77288a1cbe81411ad2b369e42a79a13ba2d84c",
+      "source_sha256": "4fa5ce1f4a40848df32a822dee95e43486fa0a9f15185bcf7301fe06318bc5c4",
+      "pages": [
+        94,
+        96
+      ]
+    },
+    "textbook-cuzhi": {
+      "starts": [
+        0,
+        101,
+        288,
+        490,
+        718,
+        806,
+        1119,
+        1434,
+        1669
+      ],
+      "text_sha256": "0d872772859faca8fad9081c6afdc0427d3c138a44a27d40622c248b079f5019",
+      "source_sha256": "4fa5ce1f4a40848df32a822dee95e43486fa0a9f15185bcf7301fe06318bc5c4",
+      "pages": [
+        126,
+        129
+      ]
+    },
+    "textbook-jianshi-shisi-shu": {
+      "starts": [
+        0,
+        152,
+        316
+      ],
+      "text_sha256": "204842b06a07042aebfd7f8467b1f2f0daaf338ea067ccb18f3480aec9222653",
+      "source_sha256": "4fa5ce1f4a40848df32a822dee95e43486fa0a9f15185bcf7301fe06318bc5c4",
+      "pages": [
+        151,
+        152
+      ]
+    },
+    "textbook-da-sima-jianyi-shu": {
+      "starts": [
+        0,
+        94,
+        239,
+        404
+      ],
+      "text_sha256": "e2dd2b753994c3a95cd8666793a6cfe5d18bfb02f2f8e24b7e23c0a826dd88f7",
+      "source_sha256": "4fa5ce1f4a40848df32a822dee95e43486fa0a9f15185bcf7301fe06318bc5c4",
+      "pages": [
+        153,
+        154
+      ]
+    },
+    "textbook-epanggong-fu": {
+      "starts": [
+        0,
+        169,
+        361,
+        521
+      ],
+      "text_sha256": "aac118d8d9126b601dfb4632fa31a78d3676d60112428b0a6868c19bba7c5d7f",
+      "source_sha256": "4fa5ce1f4a40848df32a822dee95e43486fa0a9f15185bcf7301fe06318bc5c4",
+      "pages": [
+        155,
+        156
+      ]
+    },
+    "textbook-liuguo-lun": {
+      "starts": [
+        0,
+        73,
+        296,
+        506,
+        593
+      ],
+      "text_sha256": "e856ec7342943a46eb81c6fee4c3de3c42d8a2ff095d34f5c10fc70370f8dde7",
+      "source_sha256": "4fa5ce1f4a40848df32a822dee95e43486fa0a9f15185bcf7301fe06318bc5c4",
+      "pages": [
+        157,
+        158
+      ]
+    },
+    "textbook-lunyu-12": {
+      "starts": [
+        0,
+        266,
+        292,
+        392,
+        440
+      ],
+      "text_sha256": "ea43bc8ae269a3917b44b5c22e4d57149c8474b5161f04c4540c6bbf1dfa68df",
+      "source_sha256": "853381a261836ad9655314dee5afc470e5015b8bd6b2b9d164f4ee1ca63f9931",
+      "pages": [
+        47,
+        48
+      ]
+    },
+    "textbook-daxue": {
+      "starts": [
+        0,
+        71
+      ],
+      "text_sha256": "44c1ebdba10935e39431857bf1f1ade58a208a6306614f5aa6ade0a0fc2907e6",
+      "source_sha256": "853381a261836ad9655314dee5afc470e5015b8bd6b2b9d164f4ee1ca63f9931",
+      "pages": [
+        48,
+        49
+      ]
+    },
+    "textbook-burenren": {
+      "starts": [
+        0
+      ],
+      "text_sha256": "35174a152f4e64b28b26f6322c404e80d1a43df8599dbea699ed726a496c425c",
+      "source_sha256": "853381a261836ad9655314dee5afc470e5015b8bd6b2b9d164f4ee1ca63f9931",
+      "pages": [
+        49,
+        49
+      ]
+    },
+    "textbook-laozi-four": {
+      "starts": [
+        0,
+        66,
+        130,
+        183
+      ],
+      "text_sha256": "c405cb4b7655cbc9184edb144d57b5a4f46f1aec481b6920240d679d895794d2",
+      "source_sha256": "853381a261836ad9655314dee5afc470e5015b8bd6b2b9d164f4ee1ca63f9931",
+      "pages": [
+        51,
+        52
+      ]
+    },
+    "textbook-wushi-zhi-hu": {
+      "starts": [
+        0
+      ],
+      "text_sha256": "cf994b67f5790c4b27bb56e4d085f48ba2f8f9b5d63a5fc82362dff4c2347641",
+      "source_sha256": "853381a261836ad9655314dee5afc470e5015b8bd6b2b9d164f4ee1ca63f9931",
+      "pages": [
+        52,
+        53
+      ]
+    },
+    "textbook-jianai": {
+      "starts": [
+        0,
+        109,
+        426,
+        634
+      ],
+      "text_sha256": "6bcfdbb71ecb707d7e4f27211508cffdef5468b6136a858db8a62d849f9092d9",
+      "source_sha256": "853381a261836ad9655314dee5afc470e5015b8bd6b2b9d164f4ee1ca63f9931",
+      "pages": [
+        54,
+        55
+      ]
+    },
+    "textbook-quyuan-liezhuan": {
+      "starts": [
+        0,
+        66,
+        164,
+        503,
+        717,
+        857,
+        875,
+        987,
+        1237,
+        1269,
+        1511,
+        1577
+      ],
+      "text_sha256": "c6a1cf62cbbd3241879ec13e262a0e436769b8d239e3f19aa489d0412b2d1bba",
+      "source_sha256": "e8755d73f2a4abb7380051acd6656b5baf7ee4b5f022c2d2fd69a84f63bf3568",
+      "pages": [
+        87,
+        90
+      ]
+    },
+    "textbook-suwu-zhuan": {
+      "starts": [
+        0,
+        192,
+        335,
+        494,
+        603,
+        903,
+        1111,
+        1529,
+        1621,
+        1743
+      ],
+      "text_sha256": "c1a2e27ba61c8d0a02e1c31676c94313a24bd8ab1b91a5be61c63a0eb8870574",
+      "source_sha256": "e8755d73f2a4abb7380051acd6656b5baf7ee4b5f022c2d2fd69a84f63bf3568",
+      "pages": [
+        92,
+        96
+      ]
+    },
+    "textbook-guoqin-lun": {
+      "starts": [
+        0,
+        95,
+        478,
+        737,
+        864
+      ],
+      "text_sha256": "439dce214baab6bfcab660c2ca32dc571a21696fdada1e99e8d5cbb0b41be6d0",
+      "source_sha256": "e8755d73f2a4abb7380051acd6656b5baf7ee4b5f022c2d2fd69a84f63bf3568",
+      "pages": [
+        98,
+        101
+      ]
+    },
+    "textbook-wudai-lingguan-chuan-xu": {
+      "starts": [
+        0,
+        43,
+        163,
+        329
+      ],
+      "text_sha256": "ef808f42e527c965359c3acd5bc62aa3f3d840f28d70eb5bc0ca98963231e0bd",
+      "source_sha256": "e8755d73f2a4abb7380051acd6656b5baf7ee4b5f022c2d2fd69a84f63bf3568",
+      "pages": [
+        101,
+        102
+      ]
+    },
+    "textbook-chenqingbiao": {
+      "starts": [
+        0,
+        138,
+        295,
+        444
+      ],
+      "text_sha256": "f3098577754735a27734f3b5f2b5193c2cbe51efce7e20e68a95e3aa2d13707d",
+      "source_sha256": "d070af834b700ddcb35a63d5e36389dd77afb741aeb5abe19a4e0d1e4a504701",
+      "pages": [
+        77,
+        79
+      ]
+    },
+    "textbook-xiangjixuan-zhi": {
+      "starts": [
+        0,
+        181,
+        496,
+        547,
+        661
+      ],
+      "text_sha256": "0cf5b09274544cbba57ed36e56ef49d30dbd83171939b4d2fc01d6cb04d2502c",
+      "source_sha256": "d070af834b700ddcb35a63d5e36389dd77afb741aeb5abe19a4e0d1e4a504701",
+      "pages": [
+        79,
+        81
+      ]
+    },
+    "textbook-lantingji-xu": {
+      "starts": [
+        0,
+        100,
+        148,
+        290
+      ],
+      "text_sha256": "5b07fe5614253e9c59b36e885a1c29cf1b72cbd454fe68bb320c25c2f6f46259",
+      "source_sha256": "d070af834b700ddcb35a63d5e36389dd77afb741aeb5abe19a4e0d1e4a504701",
+      "pages": [
+        82,
+        83
+      ]
+    },
+    "textbook-guiqulai-ci": {
+      "starts": [
+        0,
+        242,
+        326,
+        450,
+        557
+      ],
+      "text_sha256": "a5789f72a008f137ef30e652b0d05965c75523391bb3d1c1d7a5759c7b56f78b",
+      "source_sha256": "d070af834b700ddcb35a63d5e36389dd77afb741aeb5abe19a4e0d1e4a504701",
+      "pages": [
+        84,
+        87
+      ]
+    },
+    "textbook-guoshuo-guotuotuo-zhuan": {
+      "starts": [
+        0,
+        62,
+        136,
+        386,
+        551
+      ],
+      "text_sha256": "34e135c4cfb426ce7452d177bc40f9fcde3b52a2060d11645e6ac2ee6ac65b4a",
+      "source_sha256": "d070af834b700ddcb35a63d5e36389dd77afb741aeb5abe19a4e0d1e4a504701",
+      "pages": [
+        88,
+        90
+      ]
+    },
+    "textbook-shizhongshan-ji": {
+      "starts": [
+        0,
+        156,
+        477
+      ],
+      "text_sha256": "c526ba105b2a4c56e3a0928d16861865c500b674d429072b3c0ac608807a8ac6",
+      "source_sha256": "d070af834b700ddcb35a63d5e36389dd77afb741aeb5abe19a4e0d1e4a504701",
+      "pages": [
+        91,
+        93
+      ]
+    }
+  }
+}
