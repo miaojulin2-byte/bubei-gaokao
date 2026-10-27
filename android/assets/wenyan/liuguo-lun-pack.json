@@ -1,0 +1,903 @@
+{
+  "schema_version": 1,
+  "pack_id": "liuguo-lun",
+  "text_id": "liuguo-lun",
+  "title": "六国论",
+  "author": "苏洵",
+  "book": "嘉祐集",
+  "stage": "必修下",
+  "content_revision": "2026-10-20-liuguo-1",
+  "status": "初稿",
+  "source": {
+    "name": "2019 统编版高中语文教材",
+    "status": "教材对照",
+    "accessed": "2026-10-20"
+  },
+  "learning_contract": "高中文言文·课内",
+  "notes": "原文据 2019 统编版必修下册第 16 课；知识点和练习为初稿，待审校。",
+  "sentences": [
+    {
+      "id": "liuguo-lun-s01",
+      "order": 1,
+      "section": "第1段",
+      "text": "六国破灭，非兵不利，战不善，弊在赂秦。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s02",
+      "order": 2,
+      "section": "第1段",
+      "text": "赂秦而力亏，破灭之道也。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s03",
+      "order": 3,
+      "section": "第1段",
+      "text": "或曰：六国互丧，率赂秦耶？",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s04",
+      "order": 4,
+      "section": "第1段",
+      "text": "曰：不赂者以赂者丧。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s05",
+      "order": 5,
+      "section": "第1段",
+      "text": "盖失强援，不能独完。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s06",
+      "order": 6,
+      "section": "第1段",
+      "text": "故曰：弊在赂秦也。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s07",
+      "order": 7,
+      "section": "第2段",
+      "text": "秦以攻取之外，小则获邑，大则得城。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s08",
+      "order": 8,
+      "section": "第2段",
+      "text": "较秦之所得，与战胜而得者，其实百倍；",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s09",
+      "order": 9,
+      "section": "第2段",
+      "text": "诸侯之所亡，与战败而亡者，其实亦百倍。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s10",
+      "order": 10,
+      "section": "第2段",
+      "text": "则秦之所大欲，诸侯之所大患，固不在战矣。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s11",
+      "order": 11,
+      "section": "第2段",
+      "text": "思厥先祖父，暴霜露，斩荆棘，以有尺寸之地。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s12",
+      "order": 12,
+      "section": "第2段",
+      "text": "子孙视之不甚惜，举以予人，如弃草芥。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s13",
+      "order": 13,
+      "section": "第2段",
+      "text": "今日割五城，明日割十城，然后得一夕安寝。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s14",
+      "order": 14,
+      "section": "第2段",
+      "text": "起视四境，而秦兵又至矣。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s15",
+      "order": 15,
+      "section": "第2段",
+      "text": "然则诸侯之地有限，暴秦之欲无厌，奉之弥繁，侵之愈急。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s16",
+      "order": 16,
+      "section": "第2段",
+      "text": "故不战而强弱胜负已判矣。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s17",
+      "order": 17,
+      "section": "第2段",
+      "text": "至于颠覆，理固宜然。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s18",
+      "order": 18,
+      "section": "第2段",
+      "text": "古人云：“以地事秦，犹抱薪救火，薪不尽，火不灭。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s19",
+      "order": 19,
+      "section": "第2段",
+      "text": "此言得之。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s20",
+      "order": 20,
+      "section": "第3段",
+      "text": "齐人未尝赂秦，终继五国迁灭，何哉？",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s21",
+      "order": 21,
+      "section": "第3段",
+      "text": "与嬴而不助五国也。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s22",
+      "order": 22,
+      "section": "第3段",
+      "text": "五国既丧，齐亦不免矣。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s23",
+      "order": 23,
+      "section": "第3段",
+      "text": "燕赵之君，始有远略，能守其土，义不赂秦。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s24",
+      "order": 24,
+      "section": "第3段",
+      "text": "是故燕虽小国而后亡，斯用兵之效也。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s25",
+      "order": 25,
+      "section": "第3段",
+      "text": "至丹以荆卿为计，始速祸焉。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s26",
+      "order": 26,
+      "section": "第3段",
+      "text": "赵尝五战于秦，二败而三胜。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s27",
+      "order": 27,
+      "section": "第3段",
+      "text": "后秦击赵者再，李牧连却之。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s28",
+      "order": 28,
+      "section": "第3段",
+      "text": "洎牧以谗诛，邯郸为郡，惜其用武而不终也。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s29",
+      "order": 29,
+      "section": "第3段",
+      "text": "且燕赵处秦革灭殆尽之际，可谓智力孤危，战败而亡，诚不得已。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s30",
+      "order": 30,
+      "section": "第3段",
+      "text": "向使三国各爱其地，齐人勿附于秦，刺客不行，良将犹在，则胜负之数，存亡之理，当与秦相较，或未易量。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s31",
+      "order": 31,
+      "section": "第4段",
+      "text": "呜呼！",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s32",
+      "order": 32,
+      "section": "第4段",
+      "text": "以赂秦之地封天下之谋臣，以事秦之心礼天下之奇才，并力西向，则吾恐秦人食之不得下咽也。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s33",
+      "order": 33,
+      "section": "第4段",
+      "text": "悲夫！",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s34",
+      "order": 34,
+      "section": "第4段",
+      "text": "有如此之势，而为秦人积威之所劫，日削月割，以趋于亡。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s35",
+      "order": 35,
+      "section": "第4段",
+      "text": "为国者无使为积威之所劫哉！",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s36",
+      "order": 36,
+      "section": "第5段",
+      "text": "夫六国与秦皆诸侯，其势弱于秦，而犹有可以不赂而胜之之势。",
+      "focus": ""
+    },
+    {
+      "id": "liuguo-lun-s37",
+      "order": 37,
+      "section": "第5段",
+      "text": "苟以天下之大，下而从六国破亡之故事，是又在六国下矣。",
+      "focus": ""
+    }
+  ],
+  "recitation_segments": [
+    {
+      "id": "liuguo-lun-rec01",
+      "sentence_ids": [
+        "liuguo-lun-s01",
+        "liuguo-lun-s02"
+      ],
+      "text": "六国破灭，非兵不利，战不善，弊在赂秦。赂秦而力亏，破灭之道也。",
+      "note": "只验证原文记忆，不证明理解和朗读。"
+    },
+    {
+      "id": "liuguo-lun-rec02",
+      "sentence_ids": [
+        "liuguo-lun-s37"
+      ],
+      "text": "苟以天下之大，下而从六国破亡之故事，是又在六国下矣。",
+      "note": "只验证原文记忆，不证明理解和朗读。"
+    }
+  ],
+  "knowledge_points": [
+    {
+      "id": "liuguo-lun-kp01",
+      "sentence_id": "liuguo-lun-s01",
+      "type": "字词义",
+      "surface": "兵",
+      "context": "非兵不利",
+      "gloss": "兵器",
+      "explanation": "“兵”指兵器，不是士兵。",
+      "priority": 1,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp02",
+      "sentence_id": "liuguo-lun-s01",
+      "type": "字词义",
+      "surface": "赂",
+      "context": "弊在赂秦",
+      "gloss": "割地贿赂",
+      "explanation": "“赂”指割地贿赂秦国。",
+      "priority": 1,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp03",
+      "sentence_id": "liuguo-lun-s03",
+      "type": "字词义",
+      "surface": "率",
+      "context": "率赂秦耶",
+      "gloss": "全都",
+      "explanation": "“率”表示全都、一概。",
+      "priority": 2,
+      "tags": [],
+      "pronunciation": {
+        "pinyin": "shuài",
+        "review_status": "待审校"
+      }
+    },
+    {
+      "id": "liuguo-lun-kp04",
+      "sentence_id": "liuguo-lun-s05",
+      "type": "字词义",
+      "surface": "完",
+      "context": "不能独完",
+      "gloss": "保全",
+      "explanation": "“完”指保全。",
+      "priority": 1,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp05",
+      "sentence_id": "liuguo-lun-s11",
+      "type": "字词义",
+      "surface": "厥",
+      "context": "思厥先祖父",
+      "gloss": "其，他们的",
+      "explanation": "“厥”相当于“其”。",
+      "priority": 2,
+      "tags": [],
+      "pronunciation": {
+        "pinyin": "jué",
+        "review_status": "待审校"
+      }
+    },
+    {
+      "id": "liuguo-lun-kp06",
+      "sentence_id": "liuguo-lun-s11",
+      "type": "古今异义",
+      "surface": "祖父",
+      "context": "思厥先祖父",
+      "gloss": "祖辈父辈",
+      "explanation": "“祖父”在这里指祖辈和父辈，不是现代“爷爷”。",
+      "priority": 1,
+      "tags": [],
+      "subtype": "古今异义",
+      "modern_meaning": "爷爷"
+    },
+    {
+      "id": "liuguo-lun-kp07",
+      "sentence_id": "liuguo-lun-s11",
+      "type": "字词义",
+      "surface": "暴",
+      "context": "暴霜露",
+      "gloss": "暴露，冒着",
+      "explanation": "“暴”指暴露、冒着。",
+      "priority": 2,
+      "tags": [],
+      "pronunciation": {
+        "pinyin": "pù",
+        "review_status": "待审校"
+      }
+    },
+    {
+      "id": "liuguo-lun-kp08",
+      "sentence_id": "liuguo-lun-s12",
+      "type": "字词义",
+      "surface": "举",
+      "context": "举以予人",
+      "gloss": "拿",
+      "explanation": "“举”指拿。",
+      "priority": 2,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp09",
+      "sentence_id": "liuguo-lun-s12",
+      "type": "字词义",
+      "surface": "予",
+      "context": "举以予人",
+      "gloss": "给",
+      "explanation": "“予”指给。",
+      "priority": 2,
+      "tags": [],
+      "pronunciation": {
+        "pinyin": "yǔ",
+        "review_status": "待审校"
+      }
+    },
+    {
+      "id": "liuguo-lun-kp10",
+      "sentence_id": "liuguo-lun-s15",
+      "type": "字词义",
+      "surface": "厌",
+      "context": "暴秦之欲无厌",
+      "gloss": "满足",
+      "explanation": "“厌”指满足。",
+      "priority": 1,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp11",
+      "sentence_id": "liuguo-lun-s16",
+      "type": "字词义",
+      "surface": "判",
+      "context": "强弱胜负已判矣",
+      "gloss": "决定",
+      "explanation": "“判”指决定、分清。",
+      "priority": 2,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp12",
+      "sentence_id": "liuguo-lun-s17",
+      "type": "字词义",
+      "surface": "颠覆",
+      "context": "至于颠覆",
+      "gloss": "灭亡",
+      "explanation": "“颠覆”指国家灭亡。",
+      "priority": 2,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp13",
+      "sentence_id": "liuguo-lun-s18",
+      "type": "字词义",
+      "surface": "事",
+      "context": "以地事秦",
+      "gloss": "侍奉",
+      "explanation": "“事”指侍奉。",
+      "priority": 1,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp14",
+      "sentence_id": "liuguo-lun-s19",
+      "type": "字词义",
+      "surface": "得",
+      "context": "此言得之",
+      "gloss": "得当，正确",
+      "explanation": "“得”指得当、正确。",
+      "priority": 2,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp15",
+      "sentence_id": "liuguo-lun-s21",
+      "type": "字词义",
+      "surface": "与嬴",
+      "context": "与嬴而不助五国也",
+      "gloss": "亲附秦国",
+      "explanation": "“与”指亲附、结交；“嬴”指秦国。",
+      "priority": 2,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp16",
+      "sentence_id": "liuguo-lun-s23",
+      "type": "词类活用",
+      "surface": "义",
+      "context": "义不赂秦",
+      "gloss": "坚持正义",
+      "explanation": "“义”是名词作状语，坚持正义。",
+      "priority": 2,
+      "tags": [],
+      "subtype": "名词作状语"
+    },
+    {
+      "id": "liuguo-lun-kp17",
+      "sentence_id": "liuguo-lun-s25",
+      "type": "字词义",
+      "surface": "速",
+      "context": "始速祸焉",
+      "gloss": "招致",
+      "explanation": "“速”指招致。",
+      "priority": 1,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp18",
+      "sentence_id": "liuguo-lun-s27",
+      "type": "字词义",
+      "surface": "再",
+      "context": "后秦击赵者再",
+      "gloss": "两次",
+      "explanation": "“再”指两次。",
+      "priority": 1,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp19",
+      "sentence_id": "liuguo-lun-s27",
+      "type": "字词义",
+      "surface": "却",
+      "context": "李牧连却之",
+      "gloss": "使……退却",
+      "explanation": "“却”是使动用法，使……退却。",
+      "priority": 2,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp20",
+      "sentence_id": "liuguo-lun-s28",
+      "type": "字词义",
+      "surface": "洎",
+      "context": "洎牧以谗诛",
+      "gloss": "等到",
+      "explanation": "“洎”指等到。",
+      "priority": 2,
+      "tags": [],
+      "pronunciation": {
+        "pinyin": "jì",
+        "review_status": "待审校"
+      }
+    },
+    {
+      "id": "liuguo-lun-kp21",
+      "sentence_id": "liuguo-lun-s29",
+      "type": "古今异义",
+      "surface": "智力",
+      "context": "可谓智力孤危",
+      "gloss": "智谋和力量",
+      "explanation": "“智力”在这里指智谋和力量，不是现代“智商”。",
+      "priority": 1,
+      "tags": [],
+      "subtype": "古今异义",
+      "modern_meaning": "智商"
+    },
+    {
+      "id": "liuguo-lun-kp22",
+      "sentence_id": "liuguo-lun-s30",
+      "type": "字词义",
+      "surface": "向使",
+      "context": "向使三国各爱其地",
+      "gloss": "假使",
+      "explanation": "“向使”指假使、如果当初。",
+      "priority": 1,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp23",
+      "sentence_id": "liuguo-lun-s30",
+      "type": "字词义",
+      "surface": "数、理",
+      "context": "胜负之数，存亡之理",
+      "gloss": "命运、道理",
+      "explanation": "“数”指命运，“理”指道理。",
+      "priority": 2,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp24",
+      "sentence_id": "liuguo-lun-s32",
+      "type": "词类活用",
+      "surface": "礼",
+      "context": "以事秦之心礼天下之奇才",
+      "gloss": "礼遇",
+      "explanation": "“礼”是名词作动词，礼遇。",
+      "priority": 2,
+      "tags": [],
+      "subtype": "名词作动词"
+    },
+    {
+      "id": "liuguo-lun-kp25",
+      "sentence_id": "liuguo-lun-s34",
+      "type": "字词义",
+      "surface": "劫",
+      "context": "为秦人积威之所劫",
+      "gloss": "胁迫",
+      "explanation": "“劫”指胁迫。",
+      "priority": 1,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp26",
+      "sentence_id": "liuguo-lun-s37",
+      "type": "古今异义",
+      "surface": "故事",
+      "context": "下而从六国破亡之故事",
+      "gloss": "旧事，前例",
+      "explanation": "“故事”在这里指旧事、前例，不是现代“故事”。",
+      "priority": 1,
+      "tags": [],
+      "subtype": "古今异义",
+      "modern_meaning": "故事"
+    },
+    {
+      "id": "liuguo-lun-kp27",
+      "sentence_id": "liuguo-lun-s37",
+      "type": "字词义",
+      "surface": "苟",
+      "context": "苟以天下之大",
+      "gloss": "如果",
+      "explanation": "“苟”表示如果。",
+      "priority": 2,
+      "tags": []
+    },
+    {
+      "id": "liuguo-lun-kp28",
+      "sentence_id": "liuguo-lun-s34",
+      "type": "句式",
+      "surface": "为……所",
+      "context": "为秦人积威之所劫",
+      "gloss": "被……胁迫",
+      "explanation": "“为……所”是被动句标志。",
+      "priority": 2,
+      "tags": [],
+      "pattern": "被动句"
+    }
+  ],
+  "exercises": [
+    {
+      "id": "liuguo-lun-ex01",
+      "type": "word_meaning_choice",
+      "sentence_ids": [
+        "liuguo-lun-s01"
+      ],
+      "knowledge_point_ids": [
+        "liuguo-lun-kp01"
+      ],
+      "prompt": "“非兵不利”中的“兵”意思是：",
+      "options": [
+        "士兵",
+        "兵器",
+        "军队",
+        "战争"
+      ],
+      "answer_index": 1,
+      "explanation": "“兵”指兵器，不是士兵。",
+      "skill": "词义",
+      "source": "课内",
+      "review_status": "初稿"
+    },
+    {
+      "id": "liuguo-lun-ex02",
+      "type": "word_meaning_choice",
+      "sentence_ids": [
+        "liuguo-lun-s01"
+      ],
+      "knowledge_point_ids": [
+        "liuguo-lun-kp02"
+      ],
+      "prompt": "“弊在赂秦”中的“赂”意思是：",
+      "options": [
+        "贿赂",
+        "割地贿赂",
+        "路过",
+        "赠送"
+      ],
+      "answer_index": 1,
+      "explanation": "“赂”指割地贿赂秦国。",
+      "skill": "词义",
+      "source": "课内",
+      "review_status": "初稿"
+    },
+    {
+      "id": "liuguo-lun-ex03",
+      "type": "word_meaning_choice",
+      "sentence_ids": [
+        "liuguo-lun-s03"
+      ],
+      "knowledge_point_ids": [
+        "liuguo-lun-kp03"
+      ],
+      "prompt": "“率赂秦耶”中的“率”意思是：",
+      "options": [
+        "率领",
+        "全都",
+        "轻率",
+        "大概"
+      ],
+      "answer_index": 1,
+      "explanation": "“率”表示全都、一概。",
+      "skill": "词义",
+      "source": "课内",
+      "review_status": "初稿"
+    },
+    {
+      "id": "liuguo-lun-ex04",
+      "type": "word_meaning_choice",
+      "sentence_ids": [
+        "liuguo-lun-s05"
+      ],
+      "knowledge_point_ids": [
+        "liuguo-lun-kp04"
+      ],
+      "prompt": "“不能独完”中的“完”意思是：",
+      "options": [
+        "完成",
+        "保全",
+        "完整",
+        "结束"
+      ],
+      "answer_index": 1,
+      "explanation": "“完”指保全。",
+      "skill": "词义",
+      "source": "课内",
+      "review_status": "初稿"
+    },
+    {
+      "id": "liuguo-lun-ex05",
+      "type": "word_meaning_choice",
+      "sentence_ids": [
+        "liuguo-lun-s11"
+      ],
+      "knowledge_point_ids": [
+        "liuguo-lun-kp06"
+      ],
+      "prompt": "“思厥先祖父”中的“祖父”是指：",
+      "options": [
+        "爷爷",
+        "祖辈父辈",
+        "祖先",
+        "父亲"
+      ],
+      "answer_index": 1,
+      "explanation": "“祖父”在这里指祖辈和父辈。",
+      "skill": "古今异义",
+      "source": "课内",
+      "review_status": "初稿"
+    },
+    {
+      "id": "liuguo-lun-ex06",
+      "type": "word_meaning_choice",
+      "sentence_ids": [
+        "liuguo-lun-s15"
+      ],
+      "knowledge_point_ids": [
+        "liuguo-lun-kp10"
+      ],
+      "prompt": "“暴秦之欲无厌”中的“厌”意思是：",
+      "options": [
+        "讨厌",
+        "满足",
+        "厌恶",
+        "压制"
+      ],
+      "answer_index": 1,
+      "explanation": "“厌”指满足。",
+      "skill": "词义",
+      "source": "课内",
+      "review_status": "初稿"
+    },
+    {
+      "id": "liuguo-lun-ex07",
+      "type": "word_meaning_choice",
+      "sentence_ids": [
+        "liuguo-lun-s25"
+      ],
+      "knowledge_point_ids": [
+        "liuguo-lun-kp17"
+      ],
+      "prompt": "“始速祸焉”中的“速”意思是：",
+      "options": [
+        "快速",
+        "招致",
+        "加速",
+        "迅速"
+      ],
+      "answer_index": 1,
+      "explanation": "“速”指招致。",
+      "skill": "词义",
+      "source": "课内",
+      "review_status": "初稿"
+    },
+    {
+      "id": "liuguo-lun-ex08",
+      "type": "word_meaning_choice",
+      "sentence_ids": [
+        "liuguo-lun-s27"
+      ],
+      "knowledge_point_ids": [
+        "liuguo-lun-kp18"
+      ],
+      "prompt": "“后秦击赵者再”中的“再”意思是：",
+      "options": [
+        "又一次",
+        "两次",
+        "再次",
+        "再三"
+      ],
+      "answer_index": 1,
+      "explanation": "“再”指两次。",
+      "skill": "词义",
+      "source": "课内",
+      "review_status": "初稿"
+    },
+    {
+      "id": "liuguo-lun-ex09",
+      "type": "word_meaning_choice",
+      "sentence_ids": [
+        "liuguo-lun-s29"
+      ],
+      "knowledge_point_ids": [
+        "liuguo-lun-kp21"
+      ],
+      "prompt": "“可谓智力孤危”中的“智力”是指：",
+      "options": [
+        "智商",
+        "智谋和力量",
+        "智慧和力气",
+        "智力水平"
+      ],
+      "answer_index": 1,
+      "explanation": "“智力”在这里指智谋和力量。",
+      "skill": "古今异义",
+      "source": "课内",
+      "review_status": "初稿"
+    },
+    {
+      "id": "liuguo-lun-ex10",
+      "type": "word_meaning_choice",
+      "sentence_ids": [
+        "liuguo-lun-s37"
+      ],
+      "knowledge_point_ids": [
+        "liuguo-lun-kp26"
+      ],
+      "prompt": "“下而从六国破亡之故事”中的“故事”是指：",
+      "options": [
+        "故事",
+        "旧事，前例",
+        "事故",
+        "旧话"
+      ],
+      "answer_index": 1,
+      "explanation": "“故事”在这里指旧事、前例。",
+      "skill": "古今异义",
+      "source": "课内",
+      "review_status": "初稿"
+    },
+    {
+      "id": "liuguo-lun-ex11",
+      "type": "usage_choice",
+      "sentence_ids": [
+        "liuguo-lun-s32"
+      ],
+      "knowledge_point_ids": [
+        "liuguo-lun-kp24"
+      ],
+      "prompt": "“以事秦之心礼天下之奇才”中“礼”的用法是：",
+      "options": [
+        "名词作动词",
+        "意动用法",
+        "使动用法",
+        "名词作状语"
+      ],
+      "answer_index": 0,
+      "explanation": "“礼”是名词作动词，礼遇。",
+      "skill": "词类活用",
+      "source": "课内",
+      "review_status": "初稿"
+    },
+    {
+      "id": "liuguo-lun-ex12",
+      "type": "pattern_choice",
+      "sentence_ids": [
+        "liuguo-lun-s34"
+      ],
+      "knowledge_point_ids": [
+        "liuguo-lun-kp28"
+      ],
+      "prompt": "“为秦人积威之所劫”属于哪种句式？",
+      "options": [
+        "判断句",
+        "被动句",
+        "宾语前置",
+        "状语后置"
+      ],
+      "answer_index": 1,
+      "explanation": "“为……所”是被动句标志。",
+      "skill": "句式",
+      "source": "课内",
+      "review_status": "初稿"
+    }
+  ]
+}

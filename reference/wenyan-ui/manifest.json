@@ -1,0 +1,12 @@
+{
+  "reference": "不背古文 0.2.2 UI",
+  "frozen_at": "2026-10-27",
+  "files": {
+    "ProfileIcon.java": "18f2eff2d0fce3cb9ca7fcff1a6fc57305a3ad427a1c742798d9e8c03c7bd441",
+    "CheckInCalendar.java": "26f5d7d099eacf899fedbdb4a845a55e43057148393efb9876e59108e89eddd7",
+    "MainActivity.java": "b1d6d1a64b9d04f4209a605bba8f625174c5ebc3723ec2b4dca0885f7cfe0cb7",
+    "Atmosphere.java": "b52aa7dfdb9446ac034040e094d95817c400330339e8b544da44cb86ba11e6c7",
+    "PreferenceSheet.java": "73a927b697ce0a2dd34111f0725e208a74b192f1a66e436b584c49429f2d5267",
+    "AvatarBadge.java": "f97fd3bcbf7e793e09c2c6d8c91bcd209880206b0bf98997acc43df9e2cf728b"
+  }
+}

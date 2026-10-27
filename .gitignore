@@ -1,0 +1,15 @@
+/output/
+/tools/
+/sources/
+/安装包/
+__pycache__/
+
+.DS_Store
+.env
+.env.*
+*.keystore
+*.jks
+*.apk
+*.db
+*.db-*
+*.pyc
