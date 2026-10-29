@@ -3,6 +3,8 @@ package cn.bubei.gaokao.ui
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -71,7 +73,7 @@ fun clozeText(card: Card.Cloze, revealed: Boolean, hint: Boolean, color: Color):
 private fun circled(n: Int) = if (n in 1..20) ('①' + (n - 1)).toString() else "($n)"
 
 @Composable
-fun CardFront(card: Card, exampleIndex: Int, hint: Boolean) {
+fun CardFront(card: Card, exampleIndex: Int, hint: Boolean, onChoose: (Int) -> Unit = {}) {
     val accent = MaterialTheme.colorScheme.primary
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     when (card) {
@@ -102,6 +104,13 @@ fun CardFront(card: Card, exampleIndex: Int, hint: Boolean) {
                 color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 24.dp),
             )
         }
+        is Card.Choice -> Column(modifier = Modifier.fillMaxWidth()) {
+            SourceTag(card.source)
+            Spacer(Modifier.height(18.dp))
+            ChoiceStem(card)
+            Spacer(Modifier.height(20.dp))
+            card.options.forEachIndexed { i, option -> OptionRow(card, i, option, picked = null, onClick = { onChoose(i) }) }
+        }
         is Card.Cloze -> Column(modifier = Modifier.fillMaxWidth()) {
             Text(card.deck.substringAfter(" · "), color = muted, fontSize = 13.sp)
             Spacer(Modifier.height(18.dp))
@@ -115,7 +124,7 @@ fun CardFront(card: Card, exampleIndex: Int, hint: Boolean) {
 }
 
 @Composable
-fun CardBack(card: Card, exampleIndex: Int) {
+fun CardBack(card: Card, exampleIndex: Int, picked: Int? = null) {
     val accent = MaterialTheme.colorScheme.primary
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     when (card) {
@@ -157,6 +166,15 @@ fun CardBack(card: Card, exampleIndex: Int) {
                     card.contexts[i + 1]?.let { Text("${it.author}《${it.title}》", color = muted, fontSize = 12.sp) }
                 }
             }
+        }
+        is Card.Choice -> Column(modifier = Modifier.fillMaxWidth()) {
+            SourceTag(card.source)
+            Spacer(Modifier.height(18.dp))
+            ChoiceStem(card)
+            Spacer(Modifier.height(20.dp))
+            card.options.forEachIndexed { i, option -> OptionRow(card, i, option, picked = picked ?: card.answer, onClick = null) }
+            Section(if (picked == null) "解析" else if (picked == card.answer) "答对了 · 解析" else "答错了 · 解析")
+            Text(card.explanation, fontSize = 15.sp, lineHeight = 26.sp, modifier = Modifier.padding(top = 6.dp))
         }
         is Card.Cloze -> Column(modifier = Modifier.fillMaxWidth()) {
             Text(card.deck.substringAfter(" · "), color = muted, fontSize = 13.sp)
@@ -208,6 +226,45 @@ fun PassageView(passage: Passage, answer: List<String>) {
         },
         fontFamily = Serif, fontSize = 17.sp, lineHeight = 30.sp, modifier = Modifier.padding(top = 8.dp),
     )
+}
+
+@Composable
+private fun ChoiceStem(card: Card.Choice) {
+    val accent = MaterialTheme.colorScheme.primary
+    card.stem.split("\n").forEachIndexed { i, line ->
+        Text(
+            if (card.highlight.isEmpty()) AnnotatedString(line) else highlight(line, card.highlight, accent),
+            fontFamily = if (card.subject == cn.bubei.gaokao.data.Subject.BIOLOGY) null else Serif,
+            fontSize = if (i == 0) 18.sp else 17.sp, lineHeight = 30.sp,
+            modifier = Modifier.padding(top = if (i == 0) 0.dp else 10.dp),
+        )
+    }
+}
+
+/** 选项行。picked 为空表示还没作答；作答后正确项标绿，选错的一项标红。 */
+@Composable
+private fun OptionRow(card: Card.Choice, index: Int, text: String, picked: Int?, onClick: (() -> Unit)?) {
+    val right = Color(0xFF2E8B57)
+    val wrong = Color(0xFFC0392B)
+    val state = when {
+        picked == null -> null
+        index == card.answer -> right
+        index == picked -> wrong
+        else -> null
+    }
+    val shape = RoundedCornerShape(12.dp)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp)
+            .background(state?.copy(alpha = 0.1f) ?: MaterialTheme.colorScheme.surfaceContainer, shape)
+            .border(1.dp, state ?: MaterialTheme.colorScheme.outlineVariant, shape)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+    ) {
+        if (card.options.size > 2) Text("ABCD"[index].toString(), fontWeight = FontWeight.Medium, color = state ?: MaterialTheme.colorScheme.primary, modifier = Modifier.padding(end = 12.dp))
+        Text(text, fontSize = 16.sp, lineHeight = 24.sp, color = state ?: MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+        if (state != null) Text(if (state == right) "✓" else "✗", color = state, fontSize = 18.sp)
+    }
 }
 
 @Composable

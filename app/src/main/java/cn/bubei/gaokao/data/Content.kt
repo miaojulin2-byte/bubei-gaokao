@@ -41,6 +41,13 @@ sealed class Card {
         override val subject get() = Subject.GUSHI
     }
 
+    /** 选择题：高考真题、判断题和一词多义辨析。highlight 是题干中要着色的字。 */
+    data class Choice(
+        override val id: String, override val deck: String, override val subject: Subject,
+        val source: String, val stem: String, val options: List<String>, val answer: Int,
+        val explanation: String, val highlight: String,
+    ) : Card()
+
     /** 生物填空或问答：parts 中 hidden 为待回忆部分。 */
     data class Cloze(
         override val id: String, override val deck: String,
@@ -88,7 +95,10 @@ object Content {
         )
     }.also { scenes = it }
 
-    private fun parse(subject: Subject, o: JSONObject): Card = when (subject) {
+    private fun parse(subject: Subject, o: JSONObject): Card = if (o.optString("kind") == "choice") Card.Choice(
+        o.getString("id"), o.getString("d"), subject, o.getString("src"), o.getString("stem"),
+        o.getJSONArray("opts").strings(), o.getInt("ans"), o.getString("why"), o.getString("hl"),
+    ) else when (subject) {
         Subject.WENYAN -> Card.Word(
             o.getString("id"), o.getString("d"), o.getString("w"), o.getString("p"), o.getString("g"),
             o.getJSONArray("x").arrays().map { Example(it.getString(0), it.getString(1), it.getString(2)) },

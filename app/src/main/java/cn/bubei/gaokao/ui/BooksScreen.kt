@@ -67,18 +67,18 @@ fun BooksScreen(app: AppState) {
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(6.dp).clip(RoundedCornerShape(3.dp)),
                     trackColor = MaterialTheme.colorScheme.surfaceContainerHigh, drawStopIndicator = {},
                 )
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp)) {
-                    Text("已学 ${overview.learned}/${overview.total}", color = muted, fontSize = 13.sp)
-                    Spacer(Modifier.weight(1f))
-                    Text(
-                        when {
-                            daysLeft == null -> "已暂停新学"
-                            daysLeft == 0 -> "所选范围已学完"
-                            else -> "学完所选还需 $daysLeft 天"
-                        } + "（距高考 ${daysToGaokao(app.day)} 天）",
-                        color = muted, fontSize = 13.sp,
-                    )
-                }
+                Text("已学 ${overview.learned}/${overview.total}", color = muted, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+                val examDays = daysToGaokao(app.day)
+                Text(
+                    when {
+                        daysLeft == null -> "已暂停新学"
+                        daysLeft == 0 -> "所选范围已学完，只剩复习"
+                        daysLeft > examDays -> "按现在的速度，学完所选要 $daysLeft 天，晚于高考（还有 $examDays 天），可以调高每日新学"
+                        else -> "按现在的速度，再学 $daysLeft 天学完所选，离高考还有 $examDays 天"
+                    },
+                    color = if (daysLeft != null && daysLeft > examDays) MaterialTheme.colorScheme.primary else muted,
+                    fontSize = 13.sp, lineHeight = 19.sp, modifier = Modifier.padding(top = 2.dp),
+                )
                 HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("每日新学", fontSize = 16.sp)

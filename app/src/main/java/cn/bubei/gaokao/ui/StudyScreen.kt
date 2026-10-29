@@ -69,13 +69,14 @@ fun StudyScreen(app: AppState, session: Session) {
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                if (session.stage == Stage.BACK) CardBack(card, exampleIndex)
-                else CardFront(card, exampleIndex, hint = session.stage == Stage.HINT)
+                if (session.stage == Stage.BACK) CardBack(card, exampleIndex, session.picked)
+                else CardFront(card, exampleIndex, hint = session.stage == Stage.HINT, onChoose = { i -> app.act { choose(i) } })
             }
         }
         Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             when (session.stage) {
-                Stage.FRONT -> {
+                // 选择题在卡片里直接点选项，底部不放按钮。
+                Stage.FRONT -> if (card !is cn.bubei.gaokao.data.Card.Choice) {
                     BigButton(session.subject.know, primary = true) { app.act { know() } }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         BigButton("提示一下", Modifier.weight(1f)) { app.act { hint() } }
@@ -89,7 +90,9 @@ fun StudyScreen(app: AppState, session: Session) {
                 Stage.BACK -> {
                     val grade = session.pendingGrade
                     BigButton("下一个", primary = true, sub = nextLabel(session.nextInterval(grade))) { app.act { commit() } }
-                    if (grade > 1) Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (card is cn.bubei.gaokao.data.Card.Choice) {
+                        if (grade > 1) BigButton("其实是蒙的", sub = nextLabel(session.nextInterval(2))) { app.act { commit(2) } }
+                    } else if (grade > 1) Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         BigButton("记错了", Modifier.weight(1f)) { app.act { commit(1) } }
                         if (grade == 3) BigButton("太简单", Modifier.weight(1f), sub = nextLabel(session.nextInterval(4))) { app.act { commit(4) } }
                     }

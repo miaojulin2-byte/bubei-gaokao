@@ -4,6 +4,7 @@
 用法：python3 scripts/prepare_content.py <旧版 android/assets 目录>
 旧版资源可从提交 a8cf597 取出：git archive a8cf597 android/assets | tar -x -C /tmp/legacy
 """
+import itertools
 import json
 import re
 import shutil
@@ -50,7 +51,7 @@ def wenyan(src):
             if sentence in seen:
                 continue
             seen.add(sentence)
-            examples.append([c["title"], sentence, c.get("meaning", "")])
+            examples.append([re.sub(r"（[^）]*节选[^）]*）", "", c["title"]), sentence, c.get("meaning", "")])
         cards.append({
             "id": card["id"], "d": text["volume"], "o": order,
             "w": card["word"], "p": card.get("pos", ""), "x": examples[:4],
@@ -58,8 +59,53 @@ def wenyan(src):
             "g": re.sub(r"○(\d+)", lambda m: chr(0x2460 + int(m.group(1)) - 1), card["gloss"]),
         })
     cards.sort(key=lambda c: (WENYAN_ORDER.index(c["d"]), c["o"]))
-    write("wenyan.json", {"decks": decks_in(cards, WENYAN_ORDER), "cards": cards})
-    return len(cards)
+    exam = wenyan_exam() + wenyan_contrast(cards)
+    order = ["高考真题·词语解说", "一词多义辨析"] + WENYAN_ORDER
+    all_cards = exam + cards
+    write("wenyan.json", {"decks": decks_in(all_cards, order), "cards": all_cards})
+    return len(all_cards)
+
+
+def wenyan_exam():
+    """高考与广东模拟“词语解说”题：每个与课内例句比较的选项拆成一张判断题。"""
+    out = []
+    for n, q in enumerate(load(ROOT / "scripts/wenyan_exam_source.json")):
+        out.append({
+            "id": f"wy-exam-{n + 1:03d}", "d": "高考真题·词语解说", "kind": "choice", "src": q["src"],
+            "stem": q["claim"], "opts": ["说法正确", "说法错误"], "ans": 0 if q["ok"] else 1, "why": q["why"], "hl": "",
+        })
+    return out
+
+
+def senses(gloss):
+    return [re.sub(r"[；;。，,\s]+$", "", p) for p in re.split(r"[①-⑳]", gloss)[1:]]
+
+
+def wenyan_contrast(cards):
+    """一词多义辨析：同一个词的两句课内例句，问加点词意思是否相同。
+    两句的语境义各自唯一对应到词条的某个义项时才出题，避免把近义的不同说法误判为“不同”。"""
+    out = []
+    for c in cards:
+        ss = senses(c["g"])
+        if len(c["x"]) < 2 or len(ss) < 2:
+            continue
+        tagged = []
+        for x in c["x"]:
+            m = x[2].strip("。；")
+            hits = [i for i, sense in enumerate(ss) if m and (m == sense or m in re.split(r"[，,、；]", sense))]
+            if len(hits) == 1:
+                tagged.append((x, hits[0]))
+        pairs = [(a, b) for a, b in itertools.combinations(tagged, 2) if a[0][1] != b[0][1]]
+        chosen = [p for p in pairs if p[0][1] != p[1][1]][:1] + [p for p in pairs if p[0][1] == p[1][1]][:1]
+        for (a, sa), (b, sb) in chosen:
+            same = sa == sb
+            out.append({
+                "id": f"wy-pair-{c['id']}-{len(out)}", "d": "一词多义辨析", "kind": "choice", "src": "统编版课内例句",
+                "stem": f"下面两句中的“{c['w']}”意思相同吗？\n①{a[1]}（《{a[0]}》）\n②{b[1]}（《{b[0]}》）",
+                "opts": ["意思相同", "意思不同"], "ans": 0 if same else 1, "hl": c["w"],
+                "why": f"①{a[2]}；②{b[2]}。" + ("两句属于同一义项。" if same else "两句是不同义项。"),
+            })
+    return out
 
 
 def sentence_units(text):
@@ -172,7 +218,12 @@ def biology(src):
             "parts": [[p["text"], 1 if p["hidden"] else 0] for p in b["parts"]], "img": images,
         })
     cards.sort(key=lambda c: (order.index(c["d"]), c["o"]))
-    write("biology.json", {"decks": decks_in(cards, order), "cards": cards})
+    exam = [{
+        "id": f"bio-exam-{n + 1:03d}", "d": "广东高考真题", "kind": "choice", "src": q["src"], "stem": q["stem"],
+        "opts": q["opts"], "ans": q["ans"], "why": q["explain"], "hl": "",
+    } for n, q in enumerate(load(ROOT / "scripts/biology_exam_source.json"))]
+    cards = exam + cards
+    write("biology.json", {"decks": decks_in(cards, ["广东高考真题"] + order), "cards": cards})
     return len(cards)
 
 
@@ -190,7 +241,7 @@ SCENES = [
 
 
 def scenes(texts):
-    wenyan_cards = load(OUT / "wenyan.json")["cards"]
+    wenyan_cards = [c for c in load(OUT / "wenyan.json")["cards"] if "w" in c]
     biology_ids = {c["id"] for c in load(OUT / "biology.json")["cards"]}
     out = []
     for n, scene in enumerate(SCENES):

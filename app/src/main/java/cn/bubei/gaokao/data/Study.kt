@@ -62,12 +62,20 @@ class Planner(private val store: Store, private val content: SubjectContent) {
             val row = memories[card.id]
             if (card is Card.Cloze && row != null && row.lastDay == day) takenNotes += card.noteId
         }
+        val candidates = content.cards.filter { card ->
+            card.deck in scope && card.id !in memories && !(card is Card.Cloze && !takenNotes.add(card.noteId))
+        }
+        // 真题、辨析等选择题每天约占三成，与教材卡交替出现，不让某一类连着占满好几天。
+        val (choices, others) = candidates.partition { it is Card.Choice }
+        val choiceCount = minOf(choices.size, if (others.isEmpty()) limit else (limit * 3 + 9) / 10)
+        val picked = choices.take(choiceCount).toMutableList()
+        val rest = others.take(limit - picked.size).toMutableList()
+        picked += choices.drop(choiceCount).take(limit - picked.size - rest.size)
         val out = mutableListOf<Card>()
-        for (card in content.cards) {
-            if (out.size >= limit) break
-            if (card.deck !in scope || card.id in memories) continue
-            if (card is Card.Cloze && !takenNotes.add(card.noteId)) continue
-            out += card
+        while (picked.isNotEmpty() || rest.isNotEmpty()) {
+            if (rest.isNotEmpty()) out += rest.removeAt(0)
+            if (rest.isNotEmpty()) out += rest.removeAt(0)
+            if (picked.isNotEmpty()) out += picked.removeAt(0)
         }
         return out
     }
@@ -97,6 +105,16 @@ class Session(private val store: Store, val subject: Subject, cards: List<Card>)
     var pendingGrade = 3; private set
     private val memories = store.memories(subject).toMutableMap()
 
+    /** 选择题选了第几项；答对按“良好”、答错按“忘记”提交，不用自评。 */
+    var picked: Int? = null; private set
+
+    fun choose(option: Int) {
+        val card = current as? Card.Choice ?: return
+        picked = option
+        pendingGrade = if (option == card.answer) 3 else 1
+        stage = Stage.BACK
+    }
+
     fun know() { pendingGrade = 3; stage = Stage.BACK }
     fun hint() { stage = Stage.HINT }
     fun knowAfterHint() { pendingGrade = 2; stage = Stage.BACK }
@@ -119,5 +137,6 @@ class Session(private val store: Store, val subject: Subject, cards: List<Card>)
         }
         stage = Stage.FRONT
         pendingGrade = 3
+        picked = null
     }
 }
