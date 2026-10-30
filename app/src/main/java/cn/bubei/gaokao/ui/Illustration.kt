@@ -56,6 +56,10 @@ fun loadIllustration(context: Context, name: String): Illustration? = synchroniz
     }
 }
 
+/** 用 Blender 渲染好的整幅词义画（assets/paintings/<卡片 id>.jpg），竖屏全幅。 */
+fun paintingOf(context: Context, cardId: String): String? =
+    "paintings/$cardId.jpg".takeIf { context.assets.list("paintings").orEmpty().contains("$cardId.jpg") }
+
 /** 有插图的卡片 id。 */
 fun illustratedCards(context: Context): List<String> =
     context.assets.list("illustrations").orEmpty().filter { it.endsWith(".svg") }.map { it.removeSuffix(".svg") }.sorted()

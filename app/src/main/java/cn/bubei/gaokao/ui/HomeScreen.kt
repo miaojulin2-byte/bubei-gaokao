@@ -181,10 +181,17 @@ private fun SubjectPage(
         // 背景只移动页面位移的一半左右，形成视差。
         Box(Modifier.fillMaxSize().graphicsLayer { translationX = offset * size.width * 0.55f }) {
             when (s) {
-                Subject.WENYAN -> InkLandscape(
-                    motifsOf(word?.let { (w, i) -> w.exampleFor(i)?.sentence }.orEmpty()),
-                    foreground = word?.let { loadIllustration(app.context, it.first.id) } == null,
-                )
+                Subject.WENYAN -> {
+                    val painting = word?.let { paintingOf(app.context, it.first.id) }
+                    if (painting != null) {
+                        DriftingPhoto(painting)
+                        // 文字区垫一层纸色，压住画里伸到字后面的山。
+                        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to Paper, 0.3f to Paper.copy(alpha = 0.75f), 0.48f to Color.Transparent)))
+                    } else InkLandscape(
+                        motifsOf(word?.let { (w, i) -> w.exampleFor(i)?.sentence }.orEmpty()),
+                        foreground = word?.let { loadIllustration(app.context, it.first.id) } == null,
+                    )
+                }
                 Subject.GUSHI -> DriftingPhoto(app.scene(Subject.GUSHI).image)
                 Subject.BIOLOGY -> if (bio.image == null) DnaHelix() else DriftingPhoto(bio.image)
             }
@@ -209,7 +216,7 @@ private fun SubjectPage(
                 Subject.BIOLOGY -> (app.content(Subject.BIOLOGY).byId[bio.cardId] as? Card.Cloze)?.let { BiologyFeature(it) { onOpenCard(it, 0) } }
             }
             // 文言词义插图：铺满屏宽，底边贴着 Learn/Review 卡片。
-            if (s == Subject.WENYAN && word != null && loadIllustration(app.context, word.first.id) != null) {
+            if (s == Subject.WENYAN && word != null && paintingOf(app.context, word.first.id) == null && loadIllustration(app.context, word.first.id) != null) {
                 IllustrationView(word.first.id, Modifier.weight(1f).requiredWidth(LocalConfiguration.current.screenWidthDp.dp).padding(bottom = 8.dp))
             } else Spacer(Modifier.weight(1f))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
