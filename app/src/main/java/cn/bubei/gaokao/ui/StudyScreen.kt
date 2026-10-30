@@ -1,6 +1,9 @@
 package cn.bubei.gaokao.ui
 
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,7 +48,13 @@ fun StudyScreen(app: AppState, session: Session) {
     @Suppress("UNUSED_EXPRESSION") app.step
     BackHandler { app.closeSession() }
     val card = session.current
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().navigationBarsPadding()) {
+    // 和不背单词一样：学习页的底是首页那幅画，强模糊再提亮，颜色连贯又不干扰读题。
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Box(Modifier.fillMaxSize().blur(32.dp)) { SubjectBackdrop(app, session.subject, still = true) }
+        val veil = if (androidx.compose.foundation.isSystemInDarkTheme()) Color.Black else MaterialTheme.colorScheme.background
+        Box(Modifier.fillMaxSize().background(veil.copy(alpha = if (Build.VERSION.SDK_INT >= 31) 0.72f else 0.9f)))
+    }
+    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
             IconButton(onClick = { app.closeSession() }) { Icon(Icons.Default.Close, contentDescription = "结束") }
             LinearProgressIndicator(

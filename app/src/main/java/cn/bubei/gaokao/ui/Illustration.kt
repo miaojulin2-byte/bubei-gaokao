@@ -60,6 +60,10 @@ fun loadIllustration(context: Context, name: String): Illustration? = synchroniz
 fun paintingOf(context: Context, cardId: String): String? =
     "paintings/$cardId.jpg".takeIf { context.assets.list("paintings").orEmpty().contains("$cardId.jpg") }
 
+/** 同一幅画的循环动画（.webp），没有就是 null。 */
+fun animatedPaintingOf(context: Context, cardId: String): String? =
+    "paintings/$cardId.webp".takeIf { context.assets.list("paintings").orEmpty().contains("$cardId.webp") }
+
 /** 有插图的卡片 id。 */
 fun illustratedCards(context: Context): List<String> =
     context.assets.list("illustrations").orEmpty().filter { it.endsWith(".svg") }.map { it.removeSuffix(".svg") }.sorted()

@@ -1,6 +1,12 @@
 package cn.bubei.gaokao.ui
 
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.graphics.drawable.AnimatedImageDrawable
+import android.os.Build
+import android.widget.ImageView
+import androidx.compose.ui.viewinterop.AndroidView
+import cn.bubei.gaokao.data.Subject
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -29,6 +35,62 @@ import androidx.compose.ui.platform.LocalContext
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+
+/**
+ * 某科今天的首页背景，首页和学习页共用，保证两边是同一幅画。
+ * still 为 true 时照片不推移、动画画作只取第一帧（学习页会再模糊，不必动）。
+ */
+@Composable
+fun SubjectBackdrop(app: AppState, s: Subject, still: Boolean = false) {
+    val context = LocalContext.current
+    when (s) {
+        Subject.WENYAN -> {
+            val word = remember(app.day) { dailyWord(app) }
+            val painting = word?.let { paintingOf(context, it.first.id) }
+            val animated = word?.let { animatedPaintingOf(context, it.first.id) }
+            when {
+                animated != null && !still -> AnimatedPainting(animated)
+                painting != null -> if (still) StillPhoto(painting) else DriftingPhoto(painting)
+                else -> InkLandscape(
+                    motifsOf(word?.let { (w, i) -> w.exampleFor(i)?.sentence }.orEmpty()),
+                    foreground = word?.let { loadIllustration(context, it.first.id) } == null,
+                )
+            }
+        }
+        Subject.GUSHI -> app.scene(Subject.GUSHI).image.let { if (still) StillPhoto(it) else DriftingPhoto(it) }
+        Subject.BIOLOGY -> bioScenes[(app.day % bioScenes.size).toInt()].image.let {
+            when {
+                it == null -> DnaHelix()
+                still -> StillPhoto(it)
+                else -> DriftingPhoto(it)
+            }
+        }
+    }
+}
+
+@Composable
+fun StillPhoto(asset: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val bitmap = remember(asset) { context.assets.open(asset).use { BitmapFactory.decodeStream(it) }.asImageBitmap() }
+    Image(bitmap, contentDescription = null, contentScale = ContentScale.Crop, modifier = modifier.fillMaxSize())
+}
+
+/** 循环播放的动态 WebP（Android 9 起支持）；更早的系统只显示第一帧。 */
+@Composable
+fun AnimatedPainting(asset: String, modifier: Modifier = Modifier) {
+    if (Build.VERSION.SDK_INT < 28) return StillPhoto(asset, modifier)
+    AndroidView(
+        factory = { ctx ->
+            ImageView(ctx).apply {
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                val drawable = ImageDecoder.decodeDrawable(ImageDecoder.createSource(ctx.assets, asset))
+                setImageDrawable(drawable)
+                (drawable as? AnimatedImageDrawable)?.apply { repeatCount = AnimatedImageDrawable.REPEAT_INFINITE; start() }
+            }
+        },
+        modifier = modifier.fillMaxSize(),
+    )
+}
 
 /** 慢慢推近、平移的照片，让静图有点动感。 */
 @Composable

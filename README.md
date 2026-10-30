@@ -73,4 +73,5 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
   - 酿酒酵母（DIC 显微）：Masur，公有领域（S cerevisiae under DIC microscopy）
   - 熊蜂为耧斗菜传粉：Roo72，CC BY-SA 3.0（Bee pollinating Aquilegia vulgaris）
 - 文言水墨山水、生物 DNA 双螺旋为程序绘制。
+- 文言词义画用 Blender 渲染（`scripts/blender/`），人物和马是 Quaternius 的 CC0 模型，来源见 `scripts/blender/models/README.md`。
 

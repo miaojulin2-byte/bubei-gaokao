@@ -63,9 +63,9 @@ import kotlin.math.absoluteValue
 private val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 12f))
 
 /** 生物首页：一张显微照片（或程序画的 DNA）配一张讲同一个东西的卡片。 */
-private class BioScene(val image: String?, val cardId: String)
+internal class BioScene(val image: String?, val cardId: String)
 
-private val bioScenes = listOf(
+internal val bioScenes = listOf(
     BioScene(null, "anki-1693149782555-c1"),
     BioScene("backdrops/chloro.jpg", "anki-1684071387570-basic"),
     BioScene("backdrops/neurons.jpg", "anki-1701615514180-c1"),
@@ -79,7 +79,7 @@ private val bioScenes = listOf(
  * 文言首页每天一个必修课文里的常考实词。画好插图的词优先，例句用插图画的那一句；
  * 其余的词（至少三个例句）隔天换一个，例句按天轮换。
  */
-private fun dailyWord(app: AppState): Pair<Card.Word, Int>? {
+internal fun dailyWord(app: AppState): Pair<Card.Word, Int>? {
     val illustrated = illustratedCards(app.context).mapNotNull { app.content(Subject.WENYAN).byId[it] as? Card.Word }
     if (illustrated.isNotEmpty()) {
         val word = illustrated[(app.day % illustrated.size).toInt()]
@@ -180,21 +180,11 @@ private fun SubjectPage(
     Box(Modifier.fillMaxSize().clipToBounds()) {
         // 背景只移动页面位移的一半左右，形成视差。
         Box(Modifier.fillMaxSize().graphicsLayer { translationX = offset * size.width * 0.55f }) {
-            when (s) {
-                Subject.WENYAN -> {
-                    val painting = word?.let { paintingOf(app.context, it.first.id) }
-                    if (painting != null) {
-                        DriftingPhoto(painting)
-                        // 文字区垫一层纸色，压住画里伸到字后面的山。
-                        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(0f to Paper, 0.3f to Paper.copy(alpha = 0.75f), 0.48f to Color.Transparent)))
-                    } else InkLandscape(
-                        motifsOf(word?.let { (w, i) -> w.exampleFor(i)?.sentence }.orEmpty()),
-                        foreground = word?.let { loadIllustration(app.context, it.first.id) } == null,
-                    )
-                }
-                Subject.GUSHI -> DriftingPhoto(app.scene(Subject.GUSHI).image)
-                Subject.BIOLOGY -> if (bio.image == null) DnaHelix() else DriftingPhoto(bio.image)
-            }
+            SubjectBackdrop(app, s)
+            // 文言渲染画：文字区垫一层纸色，压住画里伸到字后面的山。
+            if (s == Subject.WENYAN && word?.let { paintingOf(app.context, it.first.id) } != null) Box(
+                Modifier.fillMaxSize().background(Brush.verticalGradient(0f to Paper, 0.3f to Paper.copy(alpha = 0.75f), 0.48f to Color.Transparent))
+            )
         }
         if (s != Subject.WENYAN) Box(
             Modifier.fillMaxSize().background(
