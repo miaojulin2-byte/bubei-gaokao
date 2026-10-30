@@ -253,16 +253,15 @@ def flag(x, y, z, pole_height, size, mat_pole, mat_flag, name):
     f.name = name
     f.scale = (size * 1.5, size * 0.7, 1)
     f.rotation_euler = (math.pi / 2, 0, 0)
-    bpy.ops.object.transform_apply(scale=True)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)  # 只烘焙缩放，位置和朝向留在物体上
     f.data.materials.append(mat_flag)
     f["base"] = [c for v in f.data.vertices for c in v.co]
     return pole, f
 
 
-def wave_flags(flags, loop):
-    """每帧按 sin 重算旗面，周期正好是 loop 帧，循环时无缝。"""
-    def update(scene, *_):
-        t = scene.frame_current / loop
+def wave_flags(flags):
+    """每帧按 sin 重算旗面，一个循环正好两个波，首尾无缝。"""
+    def update(t):
         for k, f in enumerate(flags):
             base = list(f["base"])
             xs = base[0::3]
@@ -272,8 +271,7 @@ def wave_flags(flags, loop):
                 u = (bx - x0) / (x1 - x0)
                 v.co = (bx, by, bz + 0.22 * (x1 - x0) * u * math.sin(2 * math.pi * (t * 2 - u * 1.3 + k * 0.17)))
             f.data.update()
-    bpy.app.handlers.frame_change_pre.append(update)
-    update(bpy.context.scene)
+    on_frame(update)
 
 
 def camera(location, target, lens):
@@ -288,7 +286,12 @@ def camera(location, target, lens):
 def render_settings(scene, width=1080, height=2340, samples=64):
     scene.render.engine = "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in [e.identifier for e in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items] else "BLENDER_EEVEE"
     scene.eevee.taa_render_samples = samples
+    # 体积雾的格子沿深度分布：不设自定义范围时按相机裁剪面铺开，格子太粗，远处的雾会渗到近处的人马身上。
+    if hasattr(scene.eevee, "use_volume_custom_range"):
+        scene.eevee.use_volume_custom_range = True
+    scene.eevee.volumetric_start = 4
     scene.eevee.volumetric_end = 600
+    scene.eevee.volumetric_samples = 128
     scene.eevee.volumetric_tile_size = "4"
     scene.view_settings.view_transform = "Standard"
     scene.view_settings.look = "None"
@@ -296,3 +299,301 @@ def render_settings(scene, width=1080, height=2340, samples=64):
     scene.render.resolution_y = height
     scene.render.use_lock_interface = True
     scene.render.image_settings.file_format = "PNG"
+
+
+# ---- 场景里常用的几样：朝向、挂件、骑马、逐帧动画 ----
+
+LOOP = 50  # 循环动画 50 帧（2 秒，25 帧/秒）；人走一步 12.5 帧，两个步伐周期正好一圈
+
+
+def yaw_toward(direction):
+    """让面朝 -Y 的模型转向 direction（水平方向）。"""
+    return math.atan2(direction.y, direction.x) + math.pi / 2
+
+
+def keep_parent(obj, parent):
+    """挂到 parent 下面，世界坐标不变。"""
+    bpy.context.view_layer.update()
+    mw = obj.matrix_world.copy()
+    obj.parent = parent
+    obj.matrix_world = mw
+
+
+def prop(add, mat, parent=None, **kwargs):
+    """调用一个 primitive_*_add，上材质，可选挂到 parent 下。返回新物体。"""
+    add(**kwargs)
+    o = bpy.context.active_object
+    o.data.materials.append(mat)
+    if parent is not None:
+        keep_parent(o, parent)
+    return o
+
+
+def mount(horse, horse_arm, rider, rider_arm):
+    """让骑手（坐姿）的臀部落在马背最凹处，挂到马的 Torso 骨骼上随马起伏。两者先设好朝向。"""
+    seat = saddle(horse)
+    bpy.context.view_layer.update()
+    hips = rider_arm.matrix_world @ rider_arm.pose.bones["Hips"].head
+    rider.location += seat + Vector((0, 0, 0.08)) - hips
+    bpy.context.view_layer.update()
+    bpy.ops.object.select_all(action="DESELECT")
+    rider.select_set(True)
+    horse_arm.select_set(True)
+    bpy.context.view_layer.objects.active = horse_arm
+    horse_arm.data.bones.active = horse_arm.data.bones["Torso"]
+    bpy.ops.object.parent_set(type="BONE", keep_transform=True)
+
+
+def bone_point(arm, bone, tail=False):
+    bpy.context.view_layer.update()
+    b = arm.pose.bones[bone]
+    return arm.matrix_world @ (b.tail if tail else b.head)
+
+
+_updates = []
+
+
+def on_frame(fn):
+    """注册逐帧更新函数 fn(t)，t 是循环里的进度 0~1；用 sin(2πt·k) 之类保证首尾相接。"""
+    _updates.append(fn)
+    if len(_updates) == 1:
+        bpy.app.handlers.frame_change_pre.append(lambda scene, *_: [f(scene.frame_current / LOOP) for f in _updates])
+    fn(0.0)
+
+
+def sway(obj, axis, amp, phase=0.0, cycles=1):
+    """让物体绕自身某轴来回摆动（芦苇、柳枝），首尾无缝。"""
+    base = obj.rotation_euler.copy()
+    i = "xyz".index(axis)
+
+    def update(t):
+        r = base.copy()
+        r[i] += amp * math.sin(2 * math.pi * (t * cycles + phase))
+        obj.rotation_euler = r
+    on_frame(update)
+
+
+def bob(obj, amp, phase=0.0, cycles=1):
+    """上下起伏（船随波）。"""
+    base = obj.location.copy()
+
+    def update(t):
+        obj.location = base + Vector((0, 0, amp * math.sin(2 * math.pi * (t * cycles + phase))))
+    on_frame(update)
+
+
+# ---- 景物：日、雾带、河、崖、飞鸟 ----
+
+def emissive(name, color, strength=1.0):
+    """自发光、不受光影的颜色：太阳、天光。"""
+    m = bpy.data.materials.new(name)
+    m.use_nodes = True
+    nt = m.node_tree
+    nt.nodes.remove(nt.nodes["Principled BSDF"])
+    em = nt.nodes.new("ShaderNodeEmission")
+    em.inputs["Color"].default_value = color
+    em.inputs["Strength"].default_value = strength
+    nt.links.new(em.outputs["Emission"], nt.nodes["Material Output"].inputs["Surface"])
+    return m
+
+
+def sun(location, radius, color=(0.75, 0.16, 0.06, 1)):
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=radius, location=location, segments=48, ring_count=24)
+    s = bpy.context.active_object
+    s.name = "sun"
+    s.data.materials.append(emissive("sun", color, 1.0))
+    s.visible_shadow = False
+    return s
+
+
+def mist_band(center, size, z0, z1, density=0.05, scale=0.02, drift=6.0):
+    """一条横在山腰的雾带（半山居雾若带）：z0~z1 之间中间浓、上下淡，噪声成团，每个循环绕一个小圈飘动。"""
+    cx, cy = center
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(cx, cy, (z0 + z1) / 2))
+    band = bpy.context.active_object
+    band.name = "mist_band"
+    band.scale = (size[0], size[1], z1 - z0)
+    m = bpy.data.materials.new("mist_band")
+    m.use_nodes = True
+    nt = m.node_tree
+    nt.nodes.remove(nt.nodes["Principled BSDF"])
+    vol = nt.nodes.new("ShaderNodeVolumePrincipled")
+    vol.inputs["Color"].default_value = PAPER
+    gen = nt.nodes.new("ShaderNodeTexCoord")
+    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(gen.outputs["Generated"], sep.inputs["Vector"])
+    ramp = nt.nodes.new("ShaderNodeValToRGB")  # 竖直方向：两头 0，中间 1
+    ramp.color_ramp.elements[0].position = 0.0
+    ramp.color_ramp.elements[0].color = (0, 0, 0, 1)
+    ramp.color_ramp.elements[1].position = 0.45
+    ramp.color_ramp.elements[1].color = (1, 1, 1, 1)
+    e = ramp.color_ramp.elements.new(1.0)
+    e.color = (0, 0, 0, 1)
+    nt.links.new(sep.outputs["Z"], ramp.inputs["Fac"])
+    mapping = nt.nodes.new("ShaderNodeMapping")
+    nt.links.new(gen.outputs["Object"], mapping.inputs["Vector"])
+    tex = nt.nodes.new("ShaderNodeTexNoise")
+    tex.inputs["Scale"].default_value = 1.0
+    tex.inputs["Detail"].default_value = 6
+    mapping.inputs["Scale"].default_value = (size[0] * scale, size[1] * scale, (z1 - z0) * scale * 3)
+    nt.links.new(mapping.outputs["Vector"], tex.inputs["Vector"])
+    clump = nt.nodes.new("ShaderNodeMapRange")  # 噪声 0.4 以下为空，成一团一团
+    clump.inputs["From Min"].default_value = 0.42
+    clump.inputs["From Max"].default_value = 0.65
+    nt.links.new(tex.outputs["Fac"], clump.inputs["Value"])
+    mul = nt.nodes.new("ShaderNodeMath")
+    mul.operation = "MULTIPLY"
+    nt.links.new(ramp.outputs["Color"], mul.inputs[0])
+    nt.links.new(clump.outputs["Result"], mul.inputs[1])
+    mul2 = nt.nodes.new("ShaderNodeMath")
+    mul2.operation = "MULTIPLY"
+    mul2.inputs[1].default_value = density
+    nt.links.new(mul.outputs["Value"], mul2.inputs[0])
+    nt.links.new(mul2.outputs["Value"], vol.inputs["Density"])
+    nt.links.new(vol.outputs["Volume"], nt.nodes["Material Output"].inputs["Volume"])
+    band.data.materials.append(m)
+    k = drift / max(size[0], 1)  # Object 坐标是 -1~1，把米换算过去
+
+    def update(t):
+        a = 2 * math.pi * t
+        mapping.inputs["Location"].default_value = (k * math.cos(a), k * 0.4 * math.sin(a), 0)
+    on_frame(update)
+    return band
+
+
+def ribbon(name, points, width, z, mat):
+    """沿折线铺一条带子（河、路），points 是平面上的点。"""
+    bm = bmesh.new()
+    prev = None
+    for i, p in enumerate(points):
+        a = Vector(points[max(i - 1, 0)])
+        b = Vector(points[min(i + 1, len(points) - 1)])
+        d = (b - a).normalized()
+        n = Vector((-d.y, d.x)) * (width if not callable(width) else width(i / (len(points) - 1))) / 2
+        l = bm.verts.new((p[0] + n.x, p[1] + n.y, z))
+        r = bm.verts.new((p[0] - n.x, p[1] - n.y, z))
+        if prev:
+            bm.faces.new((prev[0], prev[1], r, l))
+        prev = (l, r)
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    mesh.materials.append(mat)
+    return obj
+
+
+def cliff(name, center, radius, height, seed, mat, res=120, rough=0.12):
+    """一座孤立的崖或山头：圆形包络，顶上平缓、四周陡，表面脊状噪声。"""
+    cx, cy = center
+    bm = bmesh.new()
+    rows = []
+    for j in range(res + 1):
+        row = []
+        for i in range(res + 1):
+            x = (i / res - 0.5) * radius * 2.4
+            y = (j / res - 0.5) * radius * 2.4
+            r = math.hypot(x, y) / radius
+            env = max(1 - r ** 4, 0) ** 0.5
+            n = noise.ridged_multi_fractal(Vector((x / radius * 2.5 + seed, y / radius * 2.5, seed)), 0.9, 2.1, 5, 0.9, 2.2, noise_basis="PERLIN_ORIGINAL")
+            row.append(bm.verts.new((cx + x, cy + y, height * env * (1 - rough + rough * min(max(n, 0), 1.2)) - 1.5 * (1 - env))))
+        rows.append(row)
+    for j in range(res):
+        for i in range(res):
+            bm.faces.new((rows[j][i], rows[j][i + 1], rows[j + 1][i + 1], rows[j + 1][i]))
+    mesh = bpy.data.meshes.new(name)
+    bm.to_mesh(mesh)
+    obj = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(obj)
+    mesh.materials.append(mat)
+    for f in mesh.polygons:
+        f.use_smooth = True
+    return obj
+
+
+def surface_z(obj, x, y):
+    """物体表面在 (x, y) 处的高度，用于让人站在崖上。"""
+    bpy.context.view_layer.update()
+    inv = obj.matrix_world.inverted()
+    hit, loc, *_ = obj.ray_cast(inv @ Vector((x, y, 1000)), (inv.to_3x3() @ Vector((0, 0, -1))).normalized())
+    return (obj.matrix_world @ loc).z if hit else 0.0
+
+
+def birds(center, radius, z, count, size, mat, cycles=1):
+    """几只远处的鸟绕圈飞，翅膀扇动；每个循环绕 cycles 圈，首尾无缝。"""
+    flock = []
+    for k in range(count):
+        bm = bmesh.new()
+        c = bm.verts.new((0, 0, 0))
+        tip_l = bm.verts.new((-size, -size * 0.25, 0))
+        tip_r = bm.verts.new((size, -size * 0.25, 0))
+        mid_l = bm.verts.new((-size * 0.45, size * 0.1, 0))
+        mid_r = bm.verts.new((size * 0.45, size * 0.1, 0))
+        tail = bm.verts.new((0, size * 0.3, 0))
+        bm.faces.new((c, mid_l, tip_l))
+        bm.faces.new((c, tip_r, mid_r))
+        bm.faces.new((c, mid_r, tail, mid_l))
+        mesh = bpy.data.meshes.new(f"bird{k}")
+        bm.to_mesh(mesh)
+        o = bpy.data.objects.new(f"bird{k}", mesh)
+        bpy.context.collection.objects.link(o)
+        mesh.materials.append(mat)
+        flock.append(o)
+
+    def update(t):
+        for k, o in enumerate(flock):
+            a = 2 * math.pi * (t * cycles + k / count * 0.35)
+            r = radius * (1 + 0.15 * math.sin(k * 2.1))
+            o.location = (center[0] + r * math.cos(a), center[1] + r * math.sin(a) * 0.6, z + k * size * 0.8 + 0.6 * size * math.sin(a * 2 + k))
+            o.rotation_euler = (0, 0, a)  # 鸟头沿切线（模型朝 -Y）
+            flap = math.sin(2 * math.pi * (t * 8 + k * 0.3))
+            o.scale = (1, 1, 1)
+            o.data.vertices[1].co.z = o.data.vertices[2].co.z = size * 0.5 * flap
+            o.data.vertices[3].co.z = o.data.vertices[4].co.z = size * 0.2 * flap
+            o.data.update()
+    on_frame(update)
+    return flock
+
+
+def snowy(mat, line, soft=6.0, flat_from=0.45):
+    """给山石材质加积雪：高于 line 米、坡度平缓的地方盖白，边缘用噪声打散（苍山负雪）。"""
+    nt = mat.node_tree
+    bsdf = nt.nodes["Principled BSDF"]
+    rock_color = bsdf.inputs["Base Color"].links[0].from_socket
+    geo = nt.nodes.new("ShaderNodeNewGeometry")
+    sep_p = nt.nodes.new("ShaderNodeSeparateXYZ")
+    sep_n = nt.nodes.new("ShaderNodeSeparateXYZ")
+    nt.links.new(geo.outputs["Position"], sep_p.inputs["Vector"])
+    nt.links.new(geo.outputs["Normal"], sep_n.inputs["Vector"])
+    tex = nt.nodes.new("ShaderNodeTexNoise")
+    tex.inputs["Scale"].default_value = 0.15
+    tex.inputs["Detail"].default_value = 8
+    nt.links.new(geo.outputs["Position"], tex.inputs["Vector"])
+    jitter = nt.nodes.new("ShaderNodeMath")  # 雪线上下抖动
+    jitter.operation = "MULTIPLY_ADD"
+    jitter.inputs[1].default_value = soft * 3
+    jitter.inputs[2].default_value = -soft * 1.5
+    nt.links.new(tex.outputs["Fac"], jitter.inputs[0])
+    h = nt.nodes.new("ShaderNodeMath")
+    h.operation = "ADD"
+    nt.links.new(sep_p.outputs["Z"], h.inputs[0])
+    nt.links.new(jitter.outputs["Value"], h.inputs[1])
+    by_height = nt.nodes.new("ShaderNodeMapRange")
+    by_height.inputs["From Min"].default_value = line - soft
+    by_height.inputs["From Max"].default_value = line + soft
+    nt.links.new(h.outputs["Value"], by_height.inputs["Value"])
+    by_slope = nt.nodes.new("ShaderNodeMapRange")
+    by_slope.inputs["From Min"].default_value = flat_from
+    by_slope.inputs["From Max"].default_value = flat_from + 0.25
+    nt.links.new(sep_n.outputs["Z"], by_slope.inputs["Value"])
+    amount = nt.nodes.new("ShaderNodeMath")
+    amount.operation = "MULTIPLY"
+    nt.links.new(by_height.outputs["Result"], amount.inputs[0])
+    nt.links.new(by_slope.outputs["Result"], amount.inputs[1])
+    mix = nt.nodes.new("ShaderNodeMix")
+    mix.data_type = "RGBA"
+    mix.inputs["B"].default_value = (0.97, 0.965, 0.95, 1)
+    nt.links.new(amount.outputs["Value"], mix.inputs["Factor"])
+    nt.links.new(rock_color, mix.inputs["A"])
+    nt.links.new(mix.outputs["Result"], bsdf.inputs["Base Color"])
+    return mat
