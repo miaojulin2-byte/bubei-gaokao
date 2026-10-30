@@ -483,8 +483,8 @@ def ribbon(name, points, width, z, mat):
     return obj
 
 
-def cliff(name, center, radius, height, seed, mat, res=120, rough=0.12):
-    """一座孤立的崖或山头：圆形包络，顶上平缓、四周陡，表面脊状噪声。"""
+def cliff(name, center, radius, height, seed, mat, res=120, rough=0.12, peaked=False):
+    """一座孤立的崖或山头：圆形包络，顶上平缓、四周陡（peaked 时是尖顶），表面脊状噪声。"""
     cx, cy = center
     bm = bmesh.new()
     rows = []
@@ -494,7 +494,7 @@ def cliff(name, center, radius, height, seed, mat, res=120, rough=0.12):
             x = (i / res - 0.5) * radius * 2.4
             y = (j / res - 0.5) * radius * 2.4
             r = math.hypot(x, y) / radius
-            env = max(1 - r ** 4, 0) ** 0.5
+            env = max(1 - r, 0) ** 1.3 if peaked else max(1 - r ** 4, 0) ** 0.5  # peaked：尖顶的山；否则顶上平缓能站人
             n = noise.ridged_multi_fractal(Vector((x / radius * 2.5 + seed, y / radius * 2.5, seed)), 0.9, 2.1, 5, 0.9, 2.2, noise_basis="PERLIN_ORIGINAL")
             row.append(bm.verts.new((cx + x, cy + y, height * env * (1 - rough + rough * min(max(n, 0), 1.2)) - 1.5 * (1 - env))))
         rows.append(row)

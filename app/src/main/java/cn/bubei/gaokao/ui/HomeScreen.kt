@@ -83,7 +83,7 @@ internal fun dailyWord(app: AppState): Pair<Card.Word, Int>? {
     val illustrated = illustratedCards(app.context).mapNotNull { app.content(Subject.WENYAN).byId[it] as? Card.Word }
     if (illustrated.isNotEmpty()) {
         val word = illustrated[(app.day % illustrated.size).toInt()]
-        return word to (loadIllustration(app.context, word.id)?.example ?: 0)
+        return word to illustratedExample(app.context, word.id)
     }
     val words = app.content(Subject.WENYAN).cards.filterIsInstance<Card.Word>()
         .filter { it.pos == "实词" && it.examples.size >= 3 && it.deck.startsWith("必修") }

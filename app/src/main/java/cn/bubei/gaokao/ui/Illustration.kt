@@ -64,9 +64,27 @@ fun paintingOf(context: Context, cardId: String): String? =
 fun animatedPaintingOf(context: Context, cardId: String): String? =
     "paintings/$cardId.webp".takeIf { context.assets.list("paintings").orEmpty().contains("$cardId.webp") }
 
-/** 有插图的卡片 id。 */
-fun illustratedCards(context: Context): List<String> =
-    context.assets.list("illustrations").orEmpty().filter { it.endsWith(".svg") }.map { it.removeSuffix(".svg") }.sorted()
+/** 词义画画的是哪一句例句：paintings/examples.json，{卡片 id: 例句序号}，由 scripts/blender/render.py 渲染时写入。 */
+private var paintedExamples: Map<String, Int>? = null
+
+fun paintedExample(context: Context, cardId: String): Int? = synchronized(cache) {
+    val map = paintedExamples ?: runCatching {
+        val json = org.json.JSONObject(context.assets.open("paintings/examples.json").bufferedReader().use { it.readText() })
+        json.keys().asSequence().associateWith { json.getInt(it) }
+    }.getOrDefault(emptyMap()).also { paintedExamples = it }
+    map[cardId]
+}
+
+/** 有插图（矢量图或 Blender 词义画）的卡片 id。 */
+fun illustratedCards(context: Context): List<String> {
+    val svgs = context.assets.list("illustrations").orEmpty().filter { it.endsWith(".svg") }.map { it.removeSuffix(".svg") }
+    val paintings = context.assets.list("paintings").orEmpty().filter { it.endsWith(".jpg") }.map { it.removeSuffix(".jpg") }
+    return (svgs + paintings).distinct().sorted()
+}
+
+/** 插图对应的例句序号：词义画优先，其次矢量图里的 data-example。 */
+fun illustratedExample(context: Context, cardId: String): Int =
+    paintedExample(context, cardId) ?: loadIllustration(context, cardId)?.example ?: 0
 
 private fun parse(input: java.io.InputStream): Illustration {
     val p = Xml.newPullParser()
