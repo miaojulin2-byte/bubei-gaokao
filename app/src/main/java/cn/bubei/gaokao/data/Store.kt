@@ -20,7 +20,14 @@ data class MemoryRow(
     val memory get() = Fsrs.Memory(stability, difficulty)
 }
 
-class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 3) {
+/**
+ * 每张卡自己的目标记忆率：在总目标上，难度高、忘过的卡调高，间隔缩短，多见几次；
+ * 容易又没忘过的卡调低，间隔拉长，把时间留给难记的。上下最多差 3 个百分点。
+ */
+fun retentionFor(base: Double, m: Fsrs.Memory, lapses: Int): Double =
+    (base + 0.02 * (m.difficulty - 5) / 5 + 0.005 * minOf(lapses, 2)).coerceIn(maxOf(0.7, base - 0.03), minOf(0.99, base + 0.03))
+
+class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 4) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -31,13 +38,15 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 3) {
         db.execSQL("CREATE INDEX memory_due ON memory(subject, due_day)")
         db.execSQL(
             """CREATE TABLE log(id INTEGER PRIMARY KEY AUTOINCREMENT, ts INTEGER NOT NULL, day INTEGER NOT NULL,
-               subject TEXT NOT NULL, card_id TEXT NOT NULL, grade INTEGER NOT NULL, is_new INTEGER NOT NULL)"""
+               subject TEXT NOT NULL, card_id TEXT NOT NULL, grade INTEGER NOT NULL, is_new INTEGER NOT NULL, ms INTEGER)"""
         )
         db.execSQL("CREATE INDEX log_day ON log(day, subject)")
         createNotebooks(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        // v4：日志记下从看到题到作答用了多少毫秒。
+        if (oldVersion < 4) db.execSQL("ALTER TABLE log ADD COLUMN ms INTEGER")
         if (oldVersion < 3) {
             createNotebooks(db)
             // v2 的收藏放进一个本子。
@@ -73,8 +82,10 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 3) {
     fun newPerDay(s: Subject) = prefs.getInt("new_${s.key}", s.defaultNew)
     fun setNewPerDay(s: Subject, n: Int) = prefs.edit().putInt("new_${s.key}", n).apply()
 
-    fun retention(s: Subject) = prefs.getFloat("retention_${s.key}", 0.9f).toDouble()
-    fun setRetention(s: Subject, r: Double) = prefs.edit().putFloat("retention_${s.key}", r.toFloat()).apply()
+    /** 总的目标记忆率，三科共用，每张卡再按自己的难度上下调。旧版按科目分开设，取其中最高的。 */
+    var retention: Double
+        get() = prefs.getFloat("retention", Subject.entries.maxOfOrNull { prefs.getFloat("retention_${it.key}", 0.9f) } ?: 0.9f).toDouble()
+        set(value) = prefs.edit().putFloat("retention", value.toFloat()).apply()
 
     /** 新学范围：选中的分册或章节。为空表示还没选过，按全部处理。 */
     fun decks(s: Subject): Set<String> = prefs.getStringSet("decks_${s.key}", emptySet())!!.toSet()
@@ -157,10 +168,11 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 3) {
     )
 
     /**
-     * 记录一次作答。每张卡每天只有第一次作答进入 FSRS；
-     * 同一天里忘记后再练的作答只记日志，不重复改动记忆状态。
+     * 记录一次作答，ms 是从看到题到作答的毫秒数。
+     * 每天第一次作答按间隔天数更新记忆；同一天忘了再练的作答按 FSRS 的短期记忆公式更新，
+     * 重练答对了稳定度会涨回来一些，但复习次数和遗忘次数只按每天第一次算。
      */
-    fun answer(s: Subject, cardId: String, grade: Int, day: Long = today()) {
+    fun answer(s: Subject, cardId: String, grade: Int, ms: Long? = null, day: Long = today()) {
         val db = writableDatabase
         db.beginTransaction()
         try {
@@ -169,21 +181,21 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 3) {
             ).use { c ->
                 if (c.moveToFirst()) MemoryRow(c.getString(0), c.getDouble(1), c.getDouble(2), c.getLong(3), c.getLong(4), c.getInt(5), c.getInt(6)) else null
             }
-            if (old == null || old.lastDay < day) {
-                val elapsed = if (old == null) 0.0 else (day - old.lastDay).toDouble()
-                val next = Fsrs.next(old?.memory, elapsed, grade)
-                val interval = Fsrs.interval(next, retention(s))
-                db.insertWithOnConflict("memory", null, ContentValues().apply {
-                    put("card_id", cardId); put("subject", s.key)
-                    put("s", next.stability); put("d", next.difficulty)
-                    put("last_day", day); put("due_day", day + interval)
-                    put("reps", (old?.reps ?: 0) + 1)
-                    put("lapses", (old?.lapses ?: 0) + if (old != null && grade == 1) 1 else 0)
-                }, SQLiteDatabase.CONFLICT_REPLACE)
-            }
+            val firstToday = old == null || old.lastDay < day
+            val elapsed = if (old == null) 0.0 else (day - old.lastDay).coerceAtLeast(0).toDouble()
+            val next = Fsrs.next(old?.memory, elapsed, grade)
+            val lapses = (old?.lapses ?: 0) + if (old != null && firstToday && grade == 1) 1 else 0
+            db.insertWithOnConflict("memory", null, ContentValues().apply {
+                put("card_id", cardId); put("subject", s.key)
+                put("s", next.stability); put("d", next.difficulty)
+                put("last_day", day); put("due_day", day + Fsrs.interval(next, retentionFor(retention, next, lapses)))
+                put("reps", (old?.reps ?: 0) + if (firstToday) 1 else 0)
+                put("lapses", lapses)
+            }, SQLiteDatabase.CONFLICT_REPLACE)
             db.insert("log", null, ContentValues().apply {
                 put("ts", System.currentTimeMillis()); put("day", day); put("subject", s.key)
                 put("card_id", cardId); put("grade", grade); put("is_new", if (old == null) 1 else 0)
+                if (ms != null) put("ms", ms)
             })
             db.setTransactionSuccessful()
         } finally {
@@ -191,11 +203,12 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 3) {
         }
     }
 
-    /** 预览：按某个评分作答后多少天再见。 */
-    fun previewInterval(s: Subject, row: MemoryRow?, grade: Int, day: Long = today()): Int {
-        if (row != null && row.lastDay >= day) return 0
-        val next = Fsrs.next(row?.memory, if (row == null) 0.0 else (day - row.lastDay).toDouble(), grade)
-        return Fsrs.interval(next, retention(s))
+    /** 预览：按某个评分作答后多少天再见；今天忘了要重练的返回 0。 */
+    fun previewInterval(row: MemoryRow?, grade: Int, day: Long = today()): Int {
+        if (row != null && row.lastDay >= day && grade == 1) return 0
+        val next = Fsrs.next(row?.memory, if (row == null) 0.0 else (day - row.lastDay).coerceAtLeast(0).toDouble(), grade)
+        val lapses = (row?.lapses ?: 0) + if (row != null && row.lastDay < day && grade == 1) 1 else 0
+        return Fsrs.interval(next, retentionFor(retention, next, lapses))
     }
 
     /** 每天的作答次数（所有科目），用于日历和连续天数。 */
@@ -270,7 +283,7 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 3) {
             for (key in settings.keys()) when (val v = settings.get(key)) {
                 is JSONArray -> putStringSet(key, (0 until v.length()).map { v.getString(it) }.toSet())
                 is Boolean -> putBoolean(key, v)
-                is Int -> if (key.startsWith("retention_")) putFloat(key, v.toFloat()) else putInt(key, v)
+                is Int -> if (key.startsWith("retention")) putFloat(key, v.toFloat()) else putInt(key, v)
                 is Double -> putFloat(key, v.toFloat())
                 else -> putString(key, v.toString())
             }

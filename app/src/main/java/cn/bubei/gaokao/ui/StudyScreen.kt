@@ -101,10 +101,12 @@ fun StudyScreen(app: AppState, session: Session) {
                     val grade = session.pendingGrade
                     BigButton("下一个", primary = true, sub = nextLabel(session.nextInterval(grade))) { app.act { commit() } }
                     if (card is cn.bubei.gaokao.data.Card.Choice) {
-                        if (grade > 1) BigButton("其实是蒙的", sub = nextLabel(session.nextInterval(2))) { app.act { commit(2) } }
+                        if (session.slow) BigButton("不算慢", sub = nextLabel(session.nextInterval(3))) { app.act { commit(3) } }
+                        else if (grade > 1) BigButton("其实是蒙的", sub = nextLabel(session.nextInterval(2))) { app.act { commit(2) } }
                     } else if (grade > 1) Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                         BigButton("记错了", Modifier.weight(1f)) { app.act { commit(1) } }
-                        if (grade == 3) BigButton("太简单", Modifier.weight(1f), sub = nextLabel(session.nextInterval(4))) { app.act { commit(4) } }
+                        if (session.slow) BigButton("不算慢", Modifier.weight(1f), sub = nextLabel(session.nextInterval(3))) { app.act { commit(3) } }
+                        else if (grade == 3) BigButton("太简单", Modifier.weight(1f), sub = nextLabel(session.nextInterval(4))) { app.act { commit(4) } }
                     }
                 }
             }

@@ -150,6 +150,22 @@ fun BooksScreen(app: AppState) {
                 }
             }
         }
+        item {
+            // 全部书籍：一键全选；全选时再点不取消（至少要留一本）。
+            val selected = decks.count { it.selected }
+            val state = when (selected) { 0 -> ToggleableState.Off; decks.size -> ToggleableState.On; else -> ToggleableState.Indeterminate }
+            val toggle = { if (state != ToggleableState.On) select(decks.map { it.deck.id }.toSet(), true) }
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().clickable(onClick = toggle).padding(start = 20.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text("全部书籍", fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                    Text("${books.size} 本 · 已选 ${books.count { b -> b.decks.any { it.selected } }} 本", color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+                }
+                TriStateCheckbox(state, onClick = toggle)
+            }
+        }
         items(books, key = { it.title }) { book ->
             val selected = book.decks.count { it.selected }
             val state = when (selected) { 0 -> ToggleableState.Off; book.decks.size -> ToggleableState.On; else -> ToggleableState.Indeterminate }

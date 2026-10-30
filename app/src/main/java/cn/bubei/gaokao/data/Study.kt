@@ -1,5 +1,6 @@
 package cn.bubei.gaokao.data
 
+import android.os.SystemClock
 import java.time.LocalDate
 
 /** 距 year 年高考第一天（6 月 7 日）还有几天；已过则为 0。 */
@@ -31,7 +32,7 @@ class Planner(private val store: Store, private val content: SubjectContent) {
         return Overview(
             newLeft = minOf(maxOf(perDay - doneToday, 0), unlearned),
             newPerDay = perDay, newDoneToday = doneToday,
-            due = memories.values.count { it.dueDay <= day && it.lastDay < day },
+            due = reviewQueue(day).size,
             learned = memories.size, total = content.cards.size,
             longTerm = memories.values.count { it.stability >= LONG_TERM_DAYS },
             unlearnedInScope = unlearned,
@@ -75,11 +76,20 @@ class Planner(private val store: Store, private val content: SubjectContent) {
         return out
     }
 
-    /** 到期复习：逾期越久越靠前。 */
-    fun reviewQueue(day: Long = today()): List<Card> = store.memories(subject).values
-        .filter { it.dueDay <= day && it.lastDay < day }
-        .sortedWith(compareBy({ it.dueDay }, { it.stability }))
-        .mapNotNull { content.byId[it.cardId] }
+    /**
+     * 到期复习：逾期越久越靠前。生物同一条笔记拆出的几张填空一天只复习一张，
+     * 免得前一张刚把后一张的答案露出来；其余的顺延到明天。
+     */
+    fun reviewQueue(day: Long = today()): List<Card> {
+        val memories = store.memories(subject)
+        val notes = memories.values.filter { it.lastDay == day }
+            .mapNotNull { (content.byId[it.cardId] as? Card.Cloze)?.noteId }.toMutableSet()
+        return memories.values
+            .filter { it.dueDay <= day && it.lastDay < day }
+            .sortedWith(compareBy({ it.dueDay }, { it.stability }))
+            .mapNotNull { content.byId[it.cardId] }
+            .filter { it !is Card.Cloze || notes.add(it.noteId) }
+    }
 }
 
 /**
@@ -103,26 +113,39 @@ class Session(private val store: Store, val subject: Subject, cards: List<Card>)
     /** 选择题选了第几项；答对按“良好”、答错按“忘记”提交，不用自评。 */
     var picked: Int? = null; private set
 
-    fun choose(option: Int) {
-        val card = current as? Card.Choice ?: return
-        picked = option
-        pendingGrade = if (option == card.answer) 3 else 1
+    /** 这张卡从出现到作答用的毫秒数，和是否慢到按“模糊”算。 */
+    private var shownAt = SystemClock.elapsedRealtime()
+    private var answerMs: Long? = null
+    var slow = false; private set
+
+    /** 答对了先看快慢：想得久说明记忆已经松了，按“困难”算，间隔短一些。 */
+    private fun recalled() {
+        val ms = SystemClock.elapsedRealtime() - shownAt
+        answerMs = ms
+        slow = ms > current?.let(::expectedMs) ?: Long.MAX_VALUE
+        pendingGrade = if (slow) 2 else 3
         stage = Stage.BACK
     }
 
-    fun know() { pendingGrade = 3; stage = Stage.BACK }
-    fun hint() { stage = Stage.HINT }
-    fun knowAfterHint() { pendingGrade = 2; stage = Stage.BACK }
-    fun dontKnow() { pendingGrade = 1; stage = Stage.BACK }
+    fun choose(option: Int) {
+        val card = current as? Card.Choice ?: return
+        picked = option
+        if (option == card.answer) recalled() else { answerMs = SystemClock.elapsedRealtime() - shownAt; pendingGrade = 1; stage = Stage.BACK }
+    }
 
-    /** 下一次见面还要几天；同一天再练的卡片返回 0。 */
-    fun nextInterval(grade: Int): Int = current?.let { store.previewInterval(subject, memories[it.id], grade) } ?: 0
+    fun know() = recalled()
+    fun hint() { stage = Stage.HINT }
+    fun knowAfterHint() { answerMs = SystemClock.elapsedRealtime() - shownAt; pendingGrade = 2; stage = Stage.BACK }
+    fun dontKnow() { answerMs = SystemClock.elapsedRealtime() - shownAt; pendingGrade = 1; stage = Stage.BACK }
+
+    /** 下一次见面还要几天；今天忘了要重练的返回 0。 */
+    fun nextInterval(grade: Int): Int = current?.let { store.previewInterval(memories[it.id], grade) } ?: 0
 
     fun memoryOf(card: Card) = memories[card.id]
 
     fun commit(grade: Int = pendingGrade) {
         val card = queue.removeFirstOrNull() ?: return
-        store.answer(subject, card.id, grade)
+        store.answer(subject, card.id, grade, answerMs)
         memories[card.id] = store.memories(subject)[card.id]!!
         if (grade == 1) {
             forgotten++
@@ -133,5 +156,16 @@ class Session(private val store: Store, val subject: Subject, cards: List<Card>)
         stage = Stage.FRONT
         pendingGrade = 3
         picked = null
+        slow = false
+        answerMs = null
+        shownAt = SystemClock.elapsedRealtime()
     }
+}
+
+/** 认出这张卡大概要多久：题面越长给的时间越多，超过就算“想了很久”。 */
+private fun expectedMs(card: Card): Long = when (card) {
+    is Card.Word -> 6_000L
+    is Card.Dictation -> 8_000L + 60L * card.stem.length
+    is Card.Choice -> 15_000L + 80L * (card.stem.length + card.options.sumOf { it.length })
+    is Card.Cloze -> 6_000L + 70L * card.parts.sumOf { it.first.length }
 }

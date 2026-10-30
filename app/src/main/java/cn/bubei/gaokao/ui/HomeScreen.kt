@@ -59,6 +59,7 @@ import cn.bubei.gaokao.data.Scene
 import cn.bubei.gaokao.data.Subject
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 
 private val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 12f))
 
@@ -282,29 +283,21 @@ private fun BiologyFeature(card: Card.Cloze, onClick: () -> Unit) {
     }
 }
 
-/** 科目切换：白色（文言页为墨色）药丸随翻页滑动。 */
+/** 科目名：左上角只显示当前科目，翻页时淡出换成下一科；点一下翻到下一科。 */
 @Composable
 private fun SubjectSwitch(position: Float, chrome: Color, paperness: Float, onSelect: (Int) -> Unit) {
-    val chip = 64.dp
-    Box(Modifier.clip(RoundedCornerShape(50)).background(lerp(Color(0x33000000), Color(0x14000000), paperness)).padding(3.dp)) {
-        Box(
-            Modifier.offset(x = chip * position).width(chip).height(32.dp).clip(RoundedCornerShape(50))
-                .background(lerp(Color.White.copy(alpha = 0.92f), Ink, paperness))
+    val subjects = Subject.entries
+    val i = position.roundToInt().coerceIn(0, subjects.lastIndex)
+    val fade = (1f - 2f * (position - i).absoluteValue).coerceIn(0f, 1f)
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.clip(RoundedCornerShape(50)).background(lerp(Color.White.copy(alpha = 0.92f), Ink, paperness))
+            .clickable { onSelect((i + 1) % subjects.size) }.padding(horizontal = 18.dp, vertical = 7.dp),
+    ) {
+        Text(
+            subjects[i].short, fontSize = 14.sp, fontWeight = FontWeight.Medium,
+            color = lerp(Color(0xFF242220), Paper, paperness), modifier = Modifier.graphicsLayer { alpha = fade },
         )
-        Row {
-            Subject.entries.forEachIndexed { i, s ->
-                val near = (1f - (position - i).absoluteValue).coerceIn(0f, 1f)
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.width(chip).height(32.dp).clip(RoundedCornerShape(50)).clickable { onSelect(i) },
-                ) {
-                    Text(
-                        s.short, fontSize = 14.sp, fontWeight = if (near > 0.5f) FontWeight.Medium else FontWeight.Normal,
-                        color = lerp(chrome, lerp(Color(0xFF242220), Paper, paperness), near),
-                    )
-                }
-            }
-        }
     }
 }
 

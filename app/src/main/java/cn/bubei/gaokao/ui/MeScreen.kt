@@ -115,17 +115,20 @@ fun MeScreen(app: AppState) {
             }
         }
         Panel {
-            val subject = app.subject
-            var retention by remember(subject) { mutableStateOf(app.store.retention(subject).toFloat()) }
-            Text("${subject.title} · 目标记忆率", color = muted, fontSize = 13.sp)
+            var retention by remember { mutableStateOf(app.store.retention.toFloat()) }
+            Text("目标记忆率 · 三科共用", color = muted, fontSize = 13.sp)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Slider(
                     value = retention, onValueChange = { retention = (it * 100).roundToInt() / 100f },
-                    onValueChangeFinished = { app.store.setRetention(subject, retention.toDouble()); app.changed() },
+                    onValueChangeFinished = { app.store.retention = retention.toDouble(); app.changed() },
                     valueRange = 0.8f..0.97f, modifier = Modifier.weight(1f),
                 )
                 Text("${(retention * 100).roundToInt()}%", fontSize = 16.sp, modifier = Modifier.padding(start = 12.dp))
             }
+            Text(
+                "每张卡在这个目标上按自己的情况调：难记、忘过的卡来得勤，记牢的卡隔得久；想了很久才认出来的按“模糊”算。",
+                color = muted, fontSize = 13.sp, lineHeight = 19.sp,
+            )
             HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
             Text("学习记录", color = muted, fontSize = 13.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
