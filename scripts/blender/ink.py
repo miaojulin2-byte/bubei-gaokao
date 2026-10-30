@@ -34,12 +34,18 @@ def flat(name, color, emission=0.0):
     return m
 
 
-def rock(name, dark, light, scale):
-    """山石：噪声在浓墨和淡墨之间过渡，像皴法。"""
+def rock(name, dark, light, scale, per_meter=None):
+    """山石：噪声在浓墨和淡墨之间过渡，像皴法。
+
+    默认按物体自身的包围盒取纹理坐标；很扁很大的地形会被拉成横条，这时给 per_meter（每米几个噪声周期）按实际尺寸取。
+    """
     m = flat(name, light)
     nt = m.node_tree
     tex = nt.nodes.new("ShaderNodeTexNoise")
-    tex.inputs["Scale"].default_value = scale
+    tex.inputs["Scale"].default_value = scale if per_meter is None else per_meter
+    if per_meter is not None:
+        coord = nt.nodes.new("ShaderNodeTexCoord")
+        nt.links.new(coord.outputs["Object"], tex.inputs["Vector"])
     tex.inputs["Detail"].default_value = 12
     tex.inputs["Roughness"].default_value = 0.65
     ramp = nt.nodes.new("ShaderNodeValToRGB")

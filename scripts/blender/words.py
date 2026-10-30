@@ -7,7 +7,7 @@ import math
 
 import bmesh
 import bpy
-from mathutils import Vector
+from mathutils import Vector, noise
 
 import ink
 import props
@@ -532,37 +532,69 @@ def ju(scene):
     return {"main": ((0.3, 9, 1.8), (0.3, 100, 4.5), 30)}
 
 
+def valley(pts, width, mat, size=(900, 1100), res=(300, 330), seed=4):
+    """一整片山地，江从中间切出一道谷：离江越远山越高，山脊连绵，不是一座座孤山。
+
+    pts 是江的折线，width(u) 是 u（0~1，沿江的位置）处的江宽。
+    """
+    from mathutils import kdtree
+    dense = []
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        n = max(int(math.hypot(x1 - x0, y1 - y0) / 3), 1)
+        dense += [((x0 + (x1 - x0) * i / n), (y0 + (y1 - y0) * i / n)) for i in range(n)]
+    tree = kdtree.KDTree(len(dense))
+    for i, (x, y) in enumerate(dense):
+        tree.insert((x, y, 0), i)
+    tree.balance()
+    bm = bmesh.new()
+    nx, ny = res
+    y0, y1 = min(p[1] for p in pts) - 40, max(p[1] for p in pts)
+    rows = []
+    for j in range(ny + 1):
+        row = []
+        for i in range(nx + 1):
+            x = (i / nx - 0.5) * size[0]
+            y = y0 + (y1 - y0) * j / ny
+            _, k, d = tree.find((x, y, 0))
+            u = k / len(dense)
+            w = width(u) / 2
+            rise = min(max((d - w * 0.9) / (70 + 90 * u), 0), 1)  # 出了江岸几十米到上百米升到山的高度
+            rise = rise * rise * (3 - 2 * rise)
+            n = noise.ridged_multi_fractal(Vector((x / 90 + seed, y / 90, seed)), 0.9, 2.1, 6, 0.9, 2.2, noise_basis="PERLIN_ORIGINAL")
+            h = (20 + 80 * max(n - 0.35, 0) ** 1.3) * (1 - 0.3 * u)
+            row.append(bm.verts.new((x, y, h * rise - 1.0)))
+        rows.append(row)
+    for j in range(ny):
+        for i in range(nx):
+            bm.faces.new((rows[j][i], rows[j][i + 1], rows[j + 1][i + 1], rows[j + 1][i]))
+    mesh = bpy.data.meshes.new("valley")
+    bm.to_mesh(mesh)
+    obj = bpy.data.objects.new("valley", mesh)
+    bpy.context.collection.objects.link(obj)
+    mesh.materials.append(mat)
+    for f in mesh.polygons:
+        f.use_smooth = True
+    return obj
+
+
 # ---- 穷：尽头。哀吾生之须臾，羡长江之无穷（《赤壁赋》） ----
 def qiong(scene):
     """高处望下去，长江在两岸群山间蜿蜒，一直流到天边看不见尽头；江上一叶小舟。"""
-    landscape(far=(1400, 200, 900, 120, 160, 3), mid=None, near=None, mist=False)
-    ink.valley_mist(y=500, depth=900, height=26, density=0.012)
+    landscape(far=(1400, 200, 1100, 110, 160, 3), mid=None, near=None, mist=False)
+    ink.valley_mist(y=650, depth=1000, height=45, density=0.009)
     black = ink.flat("ink", ink.INK)
     river = ink.flat("river", (0.86, 0.85, 0.81, 1))
     pts = [(math.sin(k * 0.5) * 70 * (1 + k * 0.04) - k * 3, k * 30 - 20) for k in range(34)]
     width = lambda u: 60 - u * 35
     ink.ribbon("river", pts, width, 0.4, river)
-    ink.ground(size=(1600, 1100), y=480)
-    # 两岸的山贴着江边一座挨一座排下去，江面是纸色留白。
-    rnd = __import__("random").Random(6)
-    for i in range(0, len(pts) - 1, 2):
-        (x0, y0), (x1, y1) = pts[i], pts[i + 1]
-        d = Vector((x1 - x0, y1 - y0, 0)).normalized()
-        n = Vector((-d.y, d.x, 0))
-        w = width(i / (len(pts) - 1)) / 2
-        for side in (-1, 1):
-            r = rnd.uniform(15, 28) * (1 + i / 60)
-            c = Vector((x0, y0, 0)) + n * side * (w + r * 1.1)
-            shade = 0.05 + 0.25 * i / len(pts)  # 远山淡
-            mat = ink.rock(f"bank{i}{side}", (shade, shade, shade * 0.95, 1), (0.45 + shade, 0.44 + shade, 0.41 + shade, 1), 5)
-            ink.cliff(f"bank{i}{side}", (c.x, c.y), r, rnd.uniform(0.9, 1.5) * r, i * 2 + side, mat, res=60, rough=0.35, peaked=True)
+    valley(pts, width, ink.rock("gorge", (0.05, 0.05, 0.045, 1), (0.55, 0.54, 0.5, 1), 0, per_meter=0.04))
     ink.mist_band((0, 300), (900, 400), 18, 34, density=0.05, drift=20)
     hull = boat(4, 1.2, black)
     hull.location = (pts[3][0] + 6, pts[3][1], 0.45)
     hull.rotation_euler = (0, 0, math.radians(80))
     ink.bob(hull, 0.05)
     ink.birds((0, 120, 0), 20, 40, 3, 1.2, black)
-    return {"main": ((0, -90, 140), (-15, 600, -60), 30)}
+    return {"main": ((10, -120, 210), (-20, 600, -40), 30)}
 
 
 # ---- 阳：山的南面。泰山之阳，汶水西流（《登泰山记》） ----
