@@ -42,7 +42,11 @@ class AppState(val context: Context) {
     fun daysToExam() = daysToGaokao(day, store.gaokaoYear)
     fun isStarred(card: Card): Boolean = version >= 0 && store.isStarred(card.id)
     fun toggleStar(card: Card) { store.toggleStar(card.subject, card.id); changed() }
-    fun scene() = Content.scenes(context).let { it[(day % it.size).toInt()] }
+    /** 今天某科的首页风景。三科错开取图，同一天三科的图各不相同，每天轮换。 */
+    fun scene(s: Subject = subject) = Content.scenes(context).let { scenes ->
+        val offset = when (s) { Subject.WENYAN -> 0; Subject.GUSHI -> 3; Subject.BIOLOGY -> 5 }
+        scenes[((day + offset) % scenes.size).toInt()]
+    }
 
     fun selectSubject(s: Subject) {
         subject = s

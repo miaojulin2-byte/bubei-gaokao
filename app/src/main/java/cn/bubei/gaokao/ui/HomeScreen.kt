@@ -1,7 +1,9 @@
 package cn.bubei.gaokao.ui
 
 import android.graphics.BitmapFactory
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.size
@@ -58,10 +60,9 @@ private val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 1
 @Composable
 fun HomeScreen(app: AppState, onOpenCard: (Card, Int) -> Unit, onOpenPassage: (Scene) -> Unit) {
     @Suppress("UNUSED_EXPRESSION") app.version
-    val scene = remember(app.day) { app.scene() }
+    val scene = remember(app.day, app.subject) { app.scene() }
     val overview = app.planner().overview()
     val context = app.context
-    val bitmap = remember(scene.image) { context.assets.open(scene.image).use { BitmapFactory.decodeStream(it) }.asImageBitmap() }
 
     // 和不背单词一样：首页往下拉，松手打开搜索。
     val threshold = with(LocalDensity.current) { 96.dp.toPx() }
@@ -81,10 +82,14 @@ fun HomeScreen(app: AppState, onOpenCard: (Card, Int) -> Unit, onOpenPassage: (S
             }
         }
     ) {
-        Image(bitmap, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+        // 切换科目时换图，淡入淡出。
+        Crossfade(scene.image, animationSpec = tween(450), label = "scene") { image ->
+            val bitmap = remember(image) { context.assets.open(image).use { BitmapFactory.decodeStream(it) }.asImageBitmap() }
+            Image(bitmap, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+        }
         Box(
             Modifier.fillMaxSize().background(
-                Brush.verticalGradient(0f to Color(0x66000000), 0.35f to Color.Transparent, 0.6f to Color.Transparent, 1f to Color(0x80000000))
+                Brush.verticalGradient(0f to Color(0x8C000000), 0.3f to Color(0x4D000000), 0.5f to Color.Transparent, 0.7f to Color.Transparent, 1f to Color(0x80000000))
             )
         )
         val progress = (pull.value / threshold).coerceAtMost(1f)
