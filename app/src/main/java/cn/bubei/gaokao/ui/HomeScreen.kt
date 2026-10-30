@@ -1,7 +1,15 @@
 package cn.bubei.gaokao.ui
 
 import android.graphics.BitmapFactory
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +23,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,7 +47,6 @@ import androidx.compose.ui.unit.sp
 import cn.bubei.gaokao.data.Card
 import cn.bubei.gaokao.data.Scene
 import cn.bubei.gaokao.data.Subject
-import cn.bubei.gaokao.data.daysToGaokao
 
 private val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 12f))
 
@@ -52,18 +62,45 @@ fun HomeScreen(app: AppState, onOpenCard: (Card, Int) -> Unit, onOpenPassage: (S
     val context = app.context
     val bitmap = remember(scene.image) { context.assets.open(scene.image).use { BitmapFactory.decodeStream(it) }.asImageBitmap() }
 
-    Box(Modifier.fillMaxSize()) {
+    // 和不背单词一样：首页往下拉，松手打开搜索。
+    val threshold = with(LocalDensity.current) { 96.dp.toPx() }
+    val pull = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    Box(
+        Modifier.fillMaxSize().pointerInput(Unit) {
+            detectVerticalDragGestures(
+                onDragEnd = {
+                    if (pull.value >= threshold) app.page = Page.SEARCH
+                    scope.launch { pull.animateTo(0f) }
+                },
+                onDragCancel = { scope.launch { pull.animateTo(0f) } },
+            ) { change, dy ->
+                change.consume()
+                scope.launch { pull.snapTo((pull.value + dy * 0.6f).coerceIn(0f, threshold * 1.5f)) }
+            }
+        }
+    ) {
         Image(bitmap, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         Box(
             Modifier.fillMaxSize().background(
                 Brush.verticalGradient(0f to Color(0x66000000), 0.35f to Color.Transparent, 0.6f to Color.Transparent, 1f to Color(0x80000000))
             )
         )
-        Column(Modifier.fillMaxSize().statusBarsPadding().padding(horizontal = 20.dp)) {
+        val progress = (pull.value / threshold).coerceAtMost(1f)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.align(Alignment.TopCenter).statusBarsPadding()
+                .graphicsLayer { alpha = progress; translationY = pull.value * 0.35f }
+                .clip(RoundedCornerShape(50)).background(Color(0x59000000)).padding(horizontal = 14.dp, vertical = 7.dp),
+        ) {
+            Icon(Icons.Default.Search, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+            Text(if (progress >= 1f) "松开搜索" else "下拉搜索", color = Color.White, fontSize = 13.sp, modifier = Modifier.padding(start = 6.dp))
+        }
+        Column(Modifier.fillMaxSize().graphicsLayer { translationY = pull.value }.statusBarsPadding().padding(horizontal = 20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 12.dp)) {
                 SubjectSwitch(app.subject, app::selectSubject)
                 Spacer(Modifier.weight(1f))
-                Text("距高考 ${daysToGaokao(app.day)} 天", color = Color.White, fontSize = 13.sp, style = shadow)
+                Text("距高考 ${app.daysToExam()} 天", color = Color.White, fontSize = 13.sp, style = shadow)
             }
             Featured(app, scene, Modifier.padding(top = 48.dp), onOpenCard, onOpenPassage)
             Spacer(Modifier.weight(1f))
@@ -71,11 +108,7 @@ fun HomeScreen(app: AppState, onOpenCard: (Card, Int) -> Unit, onOpenPassage: (S
                 StudyCard("Learn", "新学", overview.newLeft, Modifier.weight(1f)) { app.startLearn() }
                 StudyCard("Review", "复习", overview.due, Modifier.weight(1f)) { app.startReview() }
             }
-            Text(
-                "${app.subject.title}  ·  已学 ${overview.learned}/${overview.total}  ·  今日新学 ${overview.newDoneToday}/${overview.newPerDay}",
-                color = Color.White.copy(alpha = 0.85f), fontSize = 12.sp, style = shadow,
-                modifier = Modifier.padding(top = 10.dp, bottom = 14.dp, start = 4.dp),
-            )
+            Spacer(Modifier.height(16.dp))
         }
     }
 }
@@ -86,7 +119,7 @@ private fun SubjectSwitch(current: Subject, onSelect: (Subject) -> Unit) {
         Subject.entries.forEach { s ->
             val selected = s == current
             Text(
-                when (s) { Subject.WENYAN -> "文言"; Subject.GUSHI -> "古诗文"; Subject.BIOLOGY -> "生物" },
+                s.short,
                 color = if (selected) Color(0xFF242220) else Color.White,
                 fontSize = 14.sp, fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
                 modifier = Modifier.clip(RoundedCornerShape(50))
@@ -102,7 +135,15 @@ private fun SubjectSwitch(current: Subject, onSelect: (Subject) -> Unit) {
 private fun Featured(app: AppState, scene: Scene, modifier: Modifier, onOpenCard: (Card, Int) -> Unit, onOpenPassage: (Scene) -> Unit) {
     val white = Color.White
     when (app.subject) {
-        Subject.GUSHI -> Column(modifier.fillMaxWidth().clickable { onOpenPassage(scene) }) {
+        Subject.GUSHI -> Column(
+            modifier.fillMaxWidth().clickable {
+                // 有考过这句的默写题就打开那道题，和搜索点进去的页面一样；没有就看原文。
+                val card = app.content(Subject.GUSHI).cards.firstOrNull { c ->
+                    c is Card.Dictation && c.answers.flatten().any { it.length >= 4 && scene.line.contains(it) }
+                }
+                if (card != null) onOpenCard(card, 0) else onOpenPassage(scene)
+            }
+        ) {
             Text(scene.line, color = white, fontFamily = Serif, fontSize = 26.sp, lineHeight = 42.sp, style = shadow)
             Text(
                 "—— ${scene.passage.author}《${scene.passage.title}》", color = white.copy(alpha = 0.9f), fontSize = 14.sp, style = shadow,

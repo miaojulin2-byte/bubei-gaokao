@@ -5,14 +5,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import cn.bubei.gaokao.data.Card
 import cn.bubei.gaokao.data.Content
 import cn.bubei.gaokao.data.Planner
 import cn.bubei.gaokao.data.Session
 import cn.bubei.gaokao.data.Store
 import cn.bubei.gaokao.data.Subject
+import cn.bubei.gaokao.data.daysToGaokao
 import cn.bubei.gaokao.data.today
 
 enum class Tab { HOME, BOOKS, ME }
+
+/** 盖在主界面上的整页：搜索、收藏夹。 */
+enum class Page { SEARCH, STARS }
 
 /** 界面状态。数据都在 Store 里，这里只保存当前在看哪一页，以及让界面刷新的版本号。 */
 class AppState(val context: Context) {
@@ -20,6 +25,10 @@ class AppState(val context: Context) {
     var subject by mutableStateOf(store.subject); private set
     var tab by mutableStateOf(Tab.HOME)
     var session by mutableStateOf<Session?>(null); private set
+    var page by mutableStateOf<Page?>(null)
+
+    /** 搜索词放在这里，从详情返回时还在。 */
+    var searchQuery by mutableStateOf("")
 
     /** 学习进度变化后加一，让依赖数据的界面重新读取。 */
     var version by mutableIntStateOf(0); private set
@@ -30,6 +39,9 @@ class AppState(val context: Context) {
     val day get() = today()
     fun content(s: Subject = subject) = Content.of(context, s)
     fun planner(s: Subject = subject) = Planner(store, content(s))
+    fun daysToExam() = daysToGaokao(day, store.gaokaoYear)
+    fun isStarred(card: Card): Boolean = version >= 0 && store.isStarred(card.id)
+    fun toggleStar(card: Card) { store.toggleStar(card.subject, card.id); changed() }
     fun scene() = Content.scenes(context).let { it[(day % it.size).toInt()] }
 
     fun selectSubject(s: Subject) {
@@ -40,7 +52,7 @@ class AppState(val context: Context) {
     fun startLearn() = start(planner().newQueue())
     fun startReview() = start(planner().reviewQueue())
 
-    private fun start(cards: List<cn.bubei.gaokao.data.Card>) {
+    private fun start(cards: List<Card>) {
         if (cards.isNotEmpty()) session = Session(store, subject, cards)
     }
 

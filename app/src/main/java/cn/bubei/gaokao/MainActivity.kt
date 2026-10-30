@@ -30,7 +30,10 @@ import cn.bubei.gaokao.ui.CardDetail
 import cn.bubei.gaokao.ui.GaokaoTheme
 import cn.bubei.gaokao.ui.HomeScreen
 import cn.bubei.gaokao.ui.MeScreen
+import cn.bubei.gaokao.ui.Page
 import cn.bubei.gaokao.ui.PassageDetail
+import cn.bubei.gaokao.ui.SearchScreen
+import cn.bubei.gaokao.ui.StarsScreen
 import cn.bubei.gaokao.ui.StudyScreen
 import cn.bubei.gaokao.ui.Tab
 
@@ -49,8 +52,10 @@ class MainActivity : ComponentActivity() {
                 Box(Modifier.fillMaxSize()) {
                     when {
                         session != null -> StudyScreen(app, session)
-                        detail != null -> CardDetail(detail!!.first, detail!!.second) { detail = null }
+                        detail != null -> CardDetail(app, detail!!.first, detail!!.second) { detail = null }
                         passage != null -> PassageDetail(passage!!) { passage = null }
+                        app.page == Page.SEARCH -> SearchScreen(app) { detail = it to 0 }
+                        app.page == Page.STARS -> StarsScreen(app) { detail = it to 0 }
                         else -> Column(Modifier.fillMaxSize()) {
                             // 内容区在底栏之上，首页风景图不会延伸到底栏后面。
                             Box(Modifier.weight(1f)) {

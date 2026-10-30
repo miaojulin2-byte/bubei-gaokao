@@ -56,8 +56,9 @@ fun StudyScreen(app: AppState, session: Session) {
             )
             Text(
                 "${session.finished}/${session.total}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp,
-                modifier = Modifier.padding(horizontal = 14.dp),
+                modifier = Modifier.padding(start = 14.dp, end = 4.dp),
             )
+            session.current?.let { StarButton(app, it) }
         }
         if (card == null) {
             Finished(app, session)
@@ -144,12 +145,17 @@ private fun Finished(app: AppState, session: Session) {
     }
 }
 
-/** 点首页卡片时的详情：只看不评分。 */
+/** 卡片详情（首页、搜索、收藏夹点进来）：只看不评分。 */
 @Composable
-fun CardDetail(card: cn.bubei.gaokao.data.Card, exampleIndex: Int, onClose: () -> Unit) {
+fun CardDetail(app: AppState, card: cn.bubei.gaokao.data.Card, exampleIndex: Int, onClose: () -> Unit) {
     BackHandler(onBack = onClose)
+    @Suppress("UNUSED_EXPRESSION") app.version
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().navigationBarsPadding()) {
-        IconButton(onClick = onClose, modifier = Modifier.padding(8.dp)) { Icon(Icons.Default.Close, contentDescription = "关闭") }
+        Row(Modifier.fillMaxWidth().padding(8.dp)) {
+            IconButton(onClick = onClose) { Icon(Icons.Default.Close, contentDescription = "关闭") }
+            Spacer(Modifier.weight(1f))
+            StarButton(app, card)
+        }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp).padding(bottom = 32.dp)) {
             CardBack(card, exampleIndex)
         }
@@ -160,9 +166,11 @@ fun CardDetail(card: cn.bubei.gaokao.data.Card, exampleIndex: Int, onClose: () -
 fun PassageDetail(passage: cn.bubei.gaokao.data.Passage, onClose: () -> Unit) {
     BackHandler(onBack = onClose)
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().navigationBarsPadding()) {
-        IconButton(onClick = onClose, modifier = Modifier.padding(8.dp)) { Icon(Icons.Default.Close, contentDescription = "关闭") }
-        Column(Modifier.padding(horizontal = 28.dp).clickable(onClick = onClose)) {
-            Text(passage.middle, fontFamily = Serif, fontSize = 26.sp, lineHeight = 42.sp)
+        Row(Modifier.fillMaxWidth().padding(8.dp)) {
+            IconButton(onClick = onClose) { Icon(Icons.Default.Close, contentDescription = "关闭") }
+        }
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp).padding(bottom = 32.dp)) {
+            Text(passage.middle, fontFamily = Serif, fontSize = 26.sp, lineHeight = 42.sp, color = MaterialTheme.colorScheme.primary)
             PassageView(passage, listOf(passage.middle))
         }
     }

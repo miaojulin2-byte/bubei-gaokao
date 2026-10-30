@@ -2,13 +2,8 @@ package cn.bubei.gaokao.data
 
 import java.time.LocalDate
 
-/** 高考第一天。过了今年的就看明年。 */
-fun daysToGaokao(day: Long = today()): Long {
-    val date = LocalDate.ofEpochDay(day)
-    var exam = LocalDate.of(date.year, 6, 7)
-    if (date.isAfter(exam)) exam = exam.plusYears(1)
-    return exam.toEpochDay() - day
-}
+/** 距 year 年高考第一天（6 月 7 日）还有几天；已过则为 0。 */
+fun daysToGaokao(day: Long, year: Int): Long = maxOf(LocalDate.of(year, 6, 7).toEpochDay() - day, 0)
 
 data class Overview(
     val newLeft: Int, val newPerDay: Int, val newDoneToday: Int,

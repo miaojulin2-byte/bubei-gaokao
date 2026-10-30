@@ -18,7 +18,7 @@ data class MemoryRow(
     val memory get() = Fsrs.Memory(stability, difficulty)
 }
 
-class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 1) {
+class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 2) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -32,9 +32,15 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 1) {
                subject TEXT NOT NULL, card_id TEXT NOT NULL, grade INTEGER NOT NULL, is_new INTEGER NOT NULL)"""
         )
         db.execSQL("CREATE INDEX log_day ON log(day, subject)")
+        createStar(db)
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) createStar(db)
+    }
+
+    private fun createStar(db: SQLiteDatabase) =
+        db.execSQL("CREATE TABLE star(card_id TEXT PRIMARY KEY, subject TEXT NOT NULL, ts INTEGER NOT NULL)")
 
     // ---- 设置 ----
 
@@ -52,7 +58,44 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 1) {
     fun decks(s: Subject): Set<String> = prefs.getStringSet("decks_${s.key}", emptySet())!!.toSet()
     fun setDecks(s: Subject, decks: Set<String>) = prefs.edit().putStringSet("decks_${s.key}", decks).apply()
 
+    /** 高考年份。默认 2028：2026 年秋季入读高二。 */
+    var gaokaoYear: Int
+        get() = prefs.getInt("gaokao_year", 2028)
+        set(value) = prefs.edit().putInt("gaokao_year", value).apply()
+
+    // ---- 收藏 ----
+
+    /** 收藏的卡片，最近收藏的在前。 */
+    fun starred(): List<Pair<Subject, String>> = readableDatabase.rawQuery("SELECT subject, card_id FROM star ORDER BY ts DESC", null).use { c ->
+        buildList {
+            while (c.moveToNext()) Subject.entries.firstOrNull { it.key == c.getString(0) }?.let { add(it to c.getString(1)) }
+        }
+    }
+
+    fun isStarred(cardId: String) = count("SELECT COUNT(*) FROM star WHERE card_id=?", cardId) > 0
+
+    fun toggleStar(s: Subject, cardId: String) {
+        if (isStarred(cardId)) writableDatabase.delete("star", "card_id=?", arrayOf(cardId))
+        else writableDatabase.insert("star", null, ContentValues().apply {
+            put("card_id", cardId); put("subject", s.key); put("ts", System.currentTimeMillis())
+        })
+    }
+
     // ---- 学习记录 ----
+
+    /** 清空学习记录（s 为空时清空三科）。收藏和设置保留。 */
+    fun reset(s: Subject?) {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            for (table in listOf("memory", "log")) {
+                if (s == null) db.delete(table, null, null) else db.delete(table, "subject=?", arrayOf(s.key))
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+    }
 
     fun memories(s: Subject): Map<String, MemoryRow> = readableDatabase.rawQuery(
         "SELECT card_id, s, d, last_day, due_day, reps, lapses FROM memory WHERE subject=?", arrayOf(s.key)
@@ -141,7 +184,7 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 1) {
         for ((k, v) in prefs.all) settings.put(k, if (v is Set<*>) JSONArray(v.toList()) else v)
         return JSONObject()
             .put("app", "bubei-gaokao").put("version", 1)
-            .put("memory", table("memory")).put("log", table("log")).put("settings", settings)
+            .put("memory", table("memory")).put("log", table("log")).put("star", table("star")).put("settings", settings)
             .toString()
     }
 
@@ -151,12 +194,14 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 1) {
         require(json.optString("app") == "bubei-gaokao") { "不是不背高考的备份文件" }
         val memory = json.getJSONArray("memory")
         val log = json.getJSONArray("log")
+        val star = json.optJSONArray("star") ?: JSONArray()
         val db = writableDatabase
         db.beginTransaction()
         try {
             db.delete("memory", null, null)
             db.delete("log", null, null)
-            for (table in listOf("memory" to memory, "log" to log)) {
+            db.delete("star", null, null)
+            for (table in listOf("memory" to memory, "log" to log, "star" to star)) {
                 for (i in 0 until table.second.length()) {
                     val row = table.second.getJSONObject(i)
                     db.insertOrThrow(table.first, null, ContentValues().apply {

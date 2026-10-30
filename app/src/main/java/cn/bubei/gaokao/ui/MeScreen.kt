@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,6 +49,7 @@ fun MeScreen(app: AppState) {
         .takeWhile { activity.containsKey(it) }.count()
     val context = app.context
     var pendingImport by remember { mutableStateOf<String?>(null) }
+    var confirmReset by remember { mutableStateOf(false) }
 
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri ?: return@rememberLauncherForActivityResult
@@ -79,7 +81,24 @@ fun MeScreen(app: AppState) {
                     Text("已学 ${o.learned}  ·  长期记忆 ${o.longTerm}  ·  待复习 ${o.due}", color = muted, fontSize = 12.sp)
                 }
             }
-            Text("长期记忆：记忆模型估计 30 天后仍记得。只是估计，不代表已掌握。", color = muted, fontSize = 11.sp, modifier = Modifier.padding(top = 14.dp))
+        }
+        Panel {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().clickable { app.page = Page.STARS }.padding(vertical = 4.dp),
+            ) {
+                Text("★", color = androidx.compose.ui.graphics.Color(0xFFE0A526), fontSize = 18.sp, modifier = Modifier.padding(end = 10.dp))
+                Text("收藏夹", fontSize = 16.sp, modifier = Modifier.weight(1f))
+                Text("${app.store.starred().size}  ›", color = muted, fontSize = 15.sp)
+            }
+            HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("高考年份", fontSize = 16.sp, modifier = Modifier.weight(1f))
+                val year = app.store.gaokaoYear
+                Stepper("−") { app.store.gaokaoYear = (year - 1).coerceAtLeast(LocalDate.now().year); app.changed() }
+                Text("$year", fontSize = 16.sp, modifier = Modifier.padding(horizontal = 14.dp))
+                Stepper("+") { app.store.gaokaoYear = (year + 1).coerceAtMost(LocalDate.now().year + 3); app.changed() }
+            }
         }
         Panel {
             val subject = app.subject
@@ -93,17 +112,18 @@ fun MeScreen(app: AppState) {
                 )
                 Text("${(retention * 100).roundToInt()}%", fontSize = 16.sp, modifier = Modifier.padding(start = 12.dp))
             }
-            Text("越高复习越勤。默认 90%，考前可以调高。", color = muted, fontSize = 12.sp)
             HorizontalDivider(Modifier.padding(vertical = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
-            Text("备份", color = muted, fontSize = 13.sp)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                TextButton(onClick = { exporter.launch("不背高考-备份-${LocalDate.now()}.json") }) { Text("导出学习记录") }
+            Text("学习记录", color = muted, fontSize = 13.sp)
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                TextButton(onClick = { exporter.launch("不背高考-备份-${LocalDate.now()}.json") }) { Text("导出") }
                 TextButton(onClick = { importer.launch(arrayOf("application/json", "*/*")) }) { Text("从备份恢复") }
+                TextButton(onClick = { confirmReset = true }) { Text("重置", color = MaterialTheme.colorScheme.error) }
             }
-            Text("卸载应用会删除本机记录，换机前请先导出。", color = muted, fontSize = 12.sp)
         }
         Spacer(Modifier.padding(bottom = 24.dp))
     }
+
+    if (confirmReset) ResetDialog(app) { confirmReset = false }
 
     pendingImport?.let { text ->
         AlertDialog(
@@ -121,6 +141,29 @@ fun MeScreen(app: AppState) {
             dismissButton = { TextButton(onClick = { pendingImport = null }) { Text("取消") } },
         )
     }
+}
+
+@Composable
+private fun ResetDialog(app: AppState, onDone: () -> Unit) {
+    val context = app.context
+    fun reset(s: Subject?) {
+        app.store.reset(s)
+        app.changed()
+        onDone()
+        Toast.makeText(context, "已重置", Toast.LENGTH_SHORT).show()
+    }
+    AlertDialog(
+        onDismissRequest = onDone,
+        title = { Text("重置学习记录？") },
+        text = { Text("已学的卡片会变回没学过，相应的学习日历记录也会删除，不能撤销。收藏和设置保留。") },
+        confirmButton = {
+            Column(horizontalAlignment = Alignment.End) {
+                TextButton(onClick = { reset(app.subject) }) { Text("只重置${app.subject.short}", color = MaterialTheme.colorScheme.error) }
+                TextButton(onClick = { reset(null) }) { Text("三科全部重置", color = MaterialTheme.colorScheme.error) }
+                TextButton(onClick = onDone) { Text("取消") }
+            }
+        },
+    )
 }
 
 @Composable
