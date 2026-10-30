@@ -103,9 +103,10 @@ fun HomeScreen(app: AppState, onOpenCard: (Card, Int) -> Unit, onOpenPassage: (S
     val pager = rememberPagerState(initialPage = app.subject.ordinal) { subjects.size }
     val scope = rememberCoroutineScope()
     LaunchedEffect(pager) { snapshotFlow { pager.settledPage }.collect { app.selectSubject(subjects[it]) } }
-    // 在书库等页面换了科目，首页跟着翻过去。
+    // 在书库等页面换了科目，首页直接跳到那一页（首页这时被盖住，不必播翻页动画）。
+    // 用动画的话，连续快速换科目会打断上一次翻页，首页停在中间那页，又把科目改回去。
     LaunchedEffect(app.subject) {
-        if (pager.settledPage != app.subject.ordinal && !pager.isScrollInProgress) pager.animateScrollToPage(app.subject.ordinal)
+        if (pager.currentPage != app.subject.ordinal || pager.isScrollInProgress) pager.scrollToPage(app.subject.ordinal)
     }
 
     val threshold = with(LocalDensity.current) { 96.dp.toPx() }
