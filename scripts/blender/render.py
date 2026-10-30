@@ -13,7 +13,6 @@ import sys
 import bpy
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-import bio  # noqa: E402
 import gushi  # noqa: E402
 import ink  # noqa: E402
 import words  # noqa: E402
@@ -24,11 +23,11 @@ width, height = (int(args[3]), int(args[4])) if len(args) >= 5 else (1080, 2340)
 
 scene = ink.reset()
 ink.render_settings(scene, width, height)  # 先设，场景可以再改（生物用 AgX 色彩、文言要光线追踪）
-# 文言实词在 words.py（带例句序号），古诗文名句在 gushi.py，生物在 bio.py。
+# 文言实词在 words.py（带例句序号），古诗文名句在 gushi.py。
 if card in words.SCENES:
     build, example = words.SCENES[card]
 else:
-    build, example = {**gushi.SCENES, **bio.SCENES}[card], None
+    build, example = gushi.SCENES[card], None
 shot = build(scene)
 location, target, lens = shot.get(mode, shot["main"])
 cam = ink.camera(location, target, lens)

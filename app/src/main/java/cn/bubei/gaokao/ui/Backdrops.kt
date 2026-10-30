@@ -67,7 +67,10 @@ fun SubjectBackdrop(app: AppState, s: Subject, still: Boolean = false) {
             }
         }
         Subject.BIOLOGY -> bioScenes[(app.day % bioScenes.size).toInt()].image.let {
-            val animated = it?.let { image -> animatedPaintingOf(context, image.substringAfterLast('/').removeSuffix(".jpg")) }
+            // 生物图：biology/bio-XX.jpg 旁边有同名 .webp（实拍延时）就播动画。
+            val animated = it?.removeSuffix(".jpg")?.plus(".webp")?.takeIf { webp ->
+                context.assets.list("biology").orEmpty().contains(webp.substringAfterLast('/'))
+            }
             when {
                 it == null -> DnaHelix()
                 animated != null && !still -> AnimatedPainting(animated)

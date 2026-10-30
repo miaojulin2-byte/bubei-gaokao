@@ -18,7 +18,7 @@ v0.3.0 是重写版。旧版（v0.1.1）的代码在提交 `a8cf597`。
 
 和不背单词一样：
 
-- 首页三科各一页，左右滑动切换（背景视差）。文言是宣纸水墨动画，每天一个必修常考实词，画面按例句语境添景（月、雪、雨、江舟、飞鸟、军旗、城楼、柳、花）；古诗文是 20 句高考默写名句各配一幅设色三维动画（黄昏、月夜、春雨、雪夜等，按诗意画）；生物是 20 个知识点各一幅深色背景的三维示意动画（双螺旋、复制、翻译、突触、噬菌体等），配讲同一内容的卡片。点文字看详情。
+- 首页三科各一页，左右滑动切换（背景视差）。文言是宣纸水墨动画，每天一个必修常考实词，画面按例句语境添景（月、雪、雨、江舟、飞鸟、军旗、城楼、柳、花）；古诗文是 20 句高考默写名句各配一幅设色三维动画（黄昏、月夜、春雨、雪夜等，按诗意画）；生物是 20 个知识点各一幅公开、可查出处的图（教材插图、Goodsell 分子插画、显微照片；质壁分离是实拍延时，正放接倒放成分离和复原），去掉白底放在深色背景上，配讲同一内容的卡片，点图注看整图和出处。点文字看详情。
 - 底部三个线条图标：书库、本子、我的，点开整页从底部滑上来，左上角 ⌄ 收起。
 - 学习时先看题，选「认识 / 提示一下 / 不认识」（古诗文是「会写 / 写不出」，生物是「会 / 不会」），再看答案；看了答案还能说「记错了」。选择题直接点选项，自动判对错，答对了还能标「其实是蒙的」。
 - 忘记的卡片在本组稍后再出现，直到答对。
@@ -65,5 +65,6 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ## 图片来源
 
 - 教材封面：国家中小学智慧教育平台。
-- 首页三科的动画都用 Blender 渲染（`scripts/blender/`：文言 `words.py`、古诗文 `gushi.py`、生物 `bio.py`），人物和马是 Quaternius 的 CC0 模型，来源见 `scripts/blender/models/README.md`。
+- 文言、古诗文首页动画用 Blender 渲染（`scripts/blender/`：文言 `words.py`、古诗文 `gushi.py`），人物和马是 Quaternius 的 CC0 模型，来源见 `scripts/blender/models/README.md`。
+- 生物首页图逐张的作者、许可和原图链接在 `app/src/main/assets/biology/sources.json`，App 里点图注也能看到。来源有：RCSB PDB-101 的 David S. Goodsell 插画（CC BY 4.0）；OpenStax《Biology 2e》《Chemistry 2e》插图（CC BY 4.0）；Blausen Medical 医学插图（CC BY 3.0，WikiJournal of Medicine 2014）；Mariana Ruiz（LadyofHats）、Ben Mills 的示意图（公有领域）；Josef Reischig 的减数分裂显微照片（CC BY-SA 3.0）；Somepics 的类囊体膜示意图（CC BY-SA 4.0）；Gabe Classon 的洋葱表皮质壁分离延时视频（CC0）。拼图脚本是 `scripts/biology/compose.py`。
 

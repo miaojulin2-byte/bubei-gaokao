@@ -1,6 +1,19 @@
 package cn.bubei.gaokao.ui
 
 import androidx.compose.animation.core.Animatable
+import org.json.JSONArray
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.foundation.Image
+import android.graphics.BitmapFactory
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
@@ -63,8 +76,24 @@ import kotlin.math.roundToInt
 
 private val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 12f))
 
-/** 生物首页：一幅三维示意动画（assets/paintings/bio-XX）配一张讲同一个东西的卡片。 */
+/**
+ * 生物首页：一幅公开、可查出处的图（assets/biology/bio-XX，教材插图、科学插画或显微实拍）配一张讲同一个东西的卡片。
+ * 图的出处在 assets/biology/sources.json，由 scripts/biology/compose.py 生成。
+ */
 internal class BioScene(val image: String?, val cardId: String)
+
+internal class BioSource(val image: String, val full: String, val what: String, val credit: String, val license: String, val url: String)
+
+private var bioSourceCache: Map<String, BioSource>? = null
+
+internal fun bioSource(context: Context, image: String): BioSource? = synchronized(bioScenes) {
+    val all = bioSourceCache ?: JSONArray(context.assets.open("biology/sources.json").bufferedReader().readText()).let { a ->
+        (0 until a.length()).map { a.getJSONObject(it) }.map {
+            BioSource(it.getString("image"), it.getString("full"), it.getString("what"), it.getString("credit"), it.getString("license"), it.getString("url"))
+        }.associateBy { it.image }
+    }.also { bioSourceCache = it }
+    all[image]
+}
 
 internal val bioScenes = listOf(
     "anki-1693149782555-c1",       // DNA 双螺旋
@@ -87,7 +116,7 @@ internal val bioScenes = listOf(
     "anki-1684072640937-basic",    // 细胞核
     "anki-1685968597916-basic",    // 渗透作用
     "anki-1685968597920-basic",    // 自由扩散
-).mapIndexed { i, card -> BioScene("paintings/bio-%02d.jpg".format(i + 1), card) }
+).mapIndexed { i, card -> BioScene("biology/bio-%02d.jpg".format(i + 1), card) }
 
 /**
  * 文言首页每天一个必修课文里的常考实词。画好插图的词优先，例句用插图画的那一句；
@@ -224,6 +253,7 @@ private fun SubjectPage(
             if (s == Subject.WENYAN && word != null && paintingOf(app.context, word.first.id) == null && loadIllustration(app.context, word.first.id) != null) {
                 IllustrationView(word.first.id, Modifier.weight(1f).requiredWidth(LocalConfiguration.current.screenWidthDp.dp).padding(bottom = 8.dp))
             } else Spacer(Modifier.weight(1f))
+            if (s == Subject.BIOLOGY) bio.image?.let { bioSource(app.context, it) }?.let { BioCaption(it) }
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StudyCard("Learn", "新学", overview.newLeft, s.accent(false), Modifier.weight(1f)) { app.startLearn(s) }
                 StudyCard("Review", "复习", overview.due, s.accent(false), Modifier.weight(1f)) { app.startReview(s) }
@@ -269,10 +299,46 @@ private fun GushiFeature(app: AppState, scene: Scene, onOpenCard: (Card, Int) ->
     }
 }
 
+/** 图注和出处，点开看整幅图。 */
+@Composable
+private fun BioCaption(source: BioSource) {
+    var open by remember { mutableStateOf(false) }
+    Column(
+        Modifier.padding(bottom = 10.dp).clip(RoundedCornerShape(12.dp)).background(Color(0xB3000000))
+            .clickable { open = true }.padding(horizontal = 12.dp, vertical = 7.dp)
+    ) {
+        Text(source.what + "  ›", color = Color.White, fontSize = 13.sp)
+        Text("图：${source.credit.substringBefore("，")} · ${source.license}", color = Color.White.copy(alpha = 0.7f), fontSize = 11.sp, maxLines = 1)
+    }
+    if (open) BioViewer(source) { open = false }
+}
+
+@Composable
+private fun BioViewer(source: BioSource, onClose: () -> Unit) {
+    val context = LocalContext.current
+    val uri = LocalUriHandler.current
+    val bitmap = remember(source.full) { context.assets.open(source.full).use { BitmapFactory.decodeStream(it) }.asImageBitmap() }
+    Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Column(
+            Modifier.fillMaxSize().background(Color(0xFF0B141B)).clickable(onClick = onClose).statusBarsPadding().navigationBarsPadding().padding(20.dp),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Image(bitmap, contentDescription = source.what, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxWidth().weight(1f, fill = false))
+            Text(source.what, color = Color.White, fontSize = 16.sp, modifier = Modifier.padding(top = 16.dp))
+            Text("图：${source.credit}", color = Color.White.copy(alpha = 0.75f), fontSize = 12.sp, lineHeight = 18.sp, modifier = Modifier.padding(top = 6.dp))
+            Text("许可：${source.license}", color = Color.White.copy(alpha = 0.75f), fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+            Text(
+                "查看原图出处 ›", color = Color(0xFFB6F0CF), fontSize = 13.sp,
+                modifier = Modifier.padding(top = 10.dp).clip(RoundedCornerShape(8.dp)).clickable { uri.openUri(source.url) }.padding(vertical = 4.dp),
+            )
+        }
+    }
+}
+
 @Composable
 private fun BiologyFeature(card: Card.Cloze, onClick: () -> Unit) {
     Column(
-        Modifier.padding(top = 20.dp).fillMaxWidth(0.62f).clip(RoundedCornerShape(16.dp)).background(Color(0x66000000))
+        Modifier.padding(top = 20.dp).fillMaxWidth(0.62f).clip(RoundedCornerShape(16.dp)).background(Color(0xA6000000))
             .clickable(onClick = onClick).padding(16.dp)
     ) {
         Text(card.deck.substringAfter(" · "), color = Color.White.copy(alpha = 0.8f), fontSize = 12.sp)
