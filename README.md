@@ -18,7 +18,7 @@ v0.3.0 是重写版。旧版（v0.1.1）的代码在提交 `a8cf597`。
 
 和不背单词一样：
 
-- 首页三科各一页，左右滑动切换（背景视差）。文言是宣纸水墨动画，每天一个必修常考实词，画面按例句语境添景（月、雪、雨、江舟、飞鸟、军旗、城楼、柳、花）；古诗文是与诗句相配的风景照；生物是显微照片或旋转的三维 DNA，配讲同一内容的卡片。点文字看详情。
+- 首页三科各一页，左右滑动切换（背景视差）。文言是宣纸水墨动画，每天一个必修常考实词，画面按例句语境添景（月、雪、雨、江舟、飞鸟、军旗、城楼、柳、花）；古诗文是 20 句高考默写名句各配一幅设色三维动画（黄昏、月夜、春雨、雪夜等，按诗意画）；生物是 20 个知识点各一幅深色背景的三维示意动画（双螺旋、复制、翻译、突触、噬菌体等），配讲同一内容的卡片。点文字看详情。
 - 底部三个线条图标：书库、本子、我的，点开整页从底部滑上来，左上角 ⌄ 收起。
 - 学习时先看题，选「认识 / 提示一下 / 不认识」（古诗文是「会写 / 写不出」，生物是「会 / 不会」），再看答案；看了答案还能说「记错了」。选择题直接点选项，自动判对错，答对了还能标「其实是蒙的」。
 - 忘记的卡片在本组稍后再出现，直到答对。
@@ -65,13 +65,5 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ## 图片来源
 
 - 教材封面：国家中小学智慧教育平台。
-- 生物首页照片均来自 Wikimedia Commons：
-  - 藓类叶片细胞中的叶绿体：Des_Callaghan，CC BY-SA 4.0（Bryum capillare leaf cells showing chloroplasts）
-  - 培养的神经元（GFP 荧光）：ManuelSchottdorf，CC BY-SA 4.0（GFP Neurons）
-  - 血细胞扫描电镜照片：Bruce Wetzel、Harry Schaefer，美国国家癌症研究所，公有领域（SEM blood cells）
-  - 红洋葱表皮细胞质壁分离：Trương Minh Khải，CC BY 4.0（Plasmolysis of red onion (Allium cepa) cells）
-  - 酿酒酵母（DIC 显微）：Masur，公有领域（S cerevisiae under DIC microscopy）
-  - 熊蜂为耧斗菜传粉：Roo72，CC BY-SA 3.0（Bee pollinating Aquilegia vulgaris）
-- 文言水墨山水、生物 DNA 双螺旋为程序绘制。
-- 文言词义画用 Blender 渲染（`scripts/blender/`），人物和马是 Quaternius 的 CC0 模型，来源见 `scripts/blender/models/README.md`。
+- 首页三科的动画都用 Blender 渲染（`scripts/blender/`：文言 `words.py`、古诗文 `gushi.py`、生物 `bio.py`），人物和马是 Quaternius 的 CC0 模型，来源见 `scripts/blender/models/README.md`。
 

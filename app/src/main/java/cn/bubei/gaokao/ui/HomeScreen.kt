@@ -62,18 +62,31 @@ import kotlin.math.absoluteValue
 
 private val shadow = TextStyle(shadow = Shadow(Color(0x99000000), blurRadius = 12f))
 
-/** 生物首页：一张显微照片（或程序画的 DNA）配一张讲同一个东西的卡片。 */
+/** 生物首页：一幅三维示意动画（assets/paintings/bio-XX）配一张讲同一个东西的卡片。 */
 internal class BioScene(val image: String?, val cardId: String)
 
 internal val bioScenes = listOf(
-    BioScene(null, "anki-1693149782555-c1"),
-    BioScene("backdrops/chloro.jpg", "anki-1684071387570-basic"),
-    BioScene("backdrops/neurons.jpg", "anki-1701615514180-c1"),
-    BioScene("backdrops/blood.jpg", "anki-1687098847266-basic"),
-    BioScene("backdrops/plasmo.jpg", "anki-1685968597918-basic"),
-    BioScene("backdrops/yeast.jpg", "anki-1686455507173-basic"),
-    BioScene("backdrops/bee.jpg", "anki-1710078823969-c1"),
-)
+    "anki-1693149782555-c1",       // DNA 双螺旋
+    "anki-1693149782561-c1",       // 半保留复制
+    "anki-1697378432727-c1",       // 中心法则（转录）
+    "anki-1697377780388-c1",       // 翻译
+    "anki-1692539511426-c1",       // 减数分裂Ⅰ 联会
+    "anki-1684071037126-basic",    // 流动镶嵌模型
+    "anki-1684071387570-basic",    // 叶绿体
+    "anki-1716117740753-c1",       // 光反应
+    "anki-1684071449421-basic",    // 线粒体
+    "anki-1702215898993-c1",       // 突触
+    "anki-1702215898971-c1",       // 动作电位
+    "anki-1687098847266-basic",    // 红细胞吸水
+    "anki-1696771448172-c1",       // T2 噬菌体
+    "anki-1709218711980-c1",       // 抗体
+    "anki-1685968597918-basic",    // 质壁分离
+    "anki-1684071557587-basic",    // 溶酶体
+    "anki-1686454239631-c1",       // ATP
+    "anki-1684072640937-basic",    // 细胞核
+    "anki-1685968597916-basic",    // 渗透作用
+    "anki-1685968597920-basic",    // 自由扩散
+).mapIndexed { i, card -> BioScene("paintings/bio-%02d.jpg".format(i + 1), card) }
 
 /**
  * 文言首页每天一个必修课文里的常考实词。画好插图的词优先，例句用插图画的那一句；

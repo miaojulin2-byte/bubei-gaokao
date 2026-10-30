@@ -103,7 +103,7 @@ def ground(size=(200, 160), y=40, mat=None):
     return g
 
 
-def valley_mist(y=260, depth=400, height=32, density=0.022):
+def valley_mist(y=260, depth=400, height=32, density=0.022, color=PAPER):
     """山谷低雾：一个体积块，密度随高度减小，山脚埋在雾里、山头露出来。"""
     bpy.ops.mesh.primitive_cube_add(size=1, location=(0, y, height / 2))
     mist = bpy.context.active_object
@@ -114,7 +114,7 @@ def valley_mist(y=260, depth=400, height=32, density=0.022):
     nt = m.node_tree
     nt.nodes.remove(nt.nodes["Principled BSDF"])
     vol = nt.nodes.new("ShaderNodeVolumePrincipled")
-    vol.inputs["Color"].default_value = PAPER
+    vol.inputs["Color"].default_value = color
     vol.inputs["Anisotropy"].default_value = 0.1
     coord = nt.nodes.new("ShaderNodeTexCoord")
     sep = nt.nodes.new("ShaderNodeSeparateXYZ")
@@ -412,7 +412,7 @@ def sun(location, radius, color=(0.75, 0.16, 0.06, 1)):
     return s
 
 
-def mist_band(center, size, z0, z1, density=0.05, scale=0.02, drift=6.0):
+def mist_band(center, size, z0, z1, density=0.05, scale=0.02, drift=6.0, color=PAPER):
     """一条横在山腰的雾带（半山居雾若带）：z0~z1 之间中间浓、上下淡，噪声成团，每个循环绕一个小圈飘动。"""
     cx, cy = center
     bpy.ops.mesh.primitive_cube_add(size=1, location=(cx, cy, (z0 + z1) / 2))
@@ -424,7 +424,7 @@ def mist_band(center, size, z0, z1, density=0.05, scale=0.02, drift=6.0):
     nt = m.node_tree
     nt.nodes.remove(nt.nodes["Principled BSDF"])
     vol = nt.nodes.new("ShaderNodeVolumePrincipled")
-    vol.inputs["Color"].default_value = PAPER
+    vol.inputs["Color"].default_value = color
     gen = nt.nodes.new("ShaderNodeTexCoord")
     sep = nt.nodes.new("ShaderNodeSeparateXYZ")
     nt.links.new(gen.outputs["Generated"], sep.inputs["Vector"])

@@ -57,10 +57,20 @@ fun SubjectBackdrop(app: AppState, s: Subject, still: Boolean = false) {
                 )
             }
         }
-        Subject.GUSHI -> app.scene(Subject.GUSHI).image.let { if (still) StillPhoto(it) else DriftingPhoto(it) }
+        Subject.GUSHI -> app.scene(Subject.GUSHI).image.let { image ->
+            // 名句画：paintings/gushi-XX.jpg 旁边有同名 .webp 动画就播动画。
+            val animated = animatedPaintingOf(context, image.substringAfterLast('/').removeSuffix(".jpg"))
+            when {
+                animated != null && !still -> AnimatedPainting(animated)
+                still -> StillPhoto(image)
+                else -> DriftingPhoto(image)
+            }
+        }
         Subject.BIOLOGY -> bioScenes[(app.day % bioScenes.size).toInt()].image.let {
+            val animated = it?.let { image -> animatedPaintingOf(context, image.substringAfterLast('/').removeSuffix(".jpg")) }
             when {
                 it == null -> DnaHelix()
+                animated != null && !still -> AnimatedPainting(animated)
                 still -> StillPhoto(it)
                 else -> DriftingPhoto(it)
             }

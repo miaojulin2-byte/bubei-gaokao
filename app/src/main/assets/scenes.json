@@ -1,1 +1,162 @@
-[{"img":"scenes/0.jpg","line":"白露横江，水光接天。","title":"赤壁赋","author":"苏轼","before":"少焉，月出于东山之上，徘徊于斗牛之间。","after":"纵一苇之所如，凌万顷之茫然。","wenyan":"tb-word-de601554431de193","example":0,"biology":"anki-1710684090481-c1"},{"img":"scenes/1.jpg","line":"三五之夜，明月半墙，桂影斑驳，风移影动，珊珊可爱。","title":"项脊轩志","author":"归有光","before":"而庭阶寂寂，小鸟时来啄食，人至不去。","after":"然余居于此，多可喜，亦多可悲。","wenyan":"tb-word-5ecdb2e1132b0a15","example":0,"biology":"anki-1701615514137-c1"},{"img":"scenes/2.jpg","line":"鹰击长空，鱼翔浅底，万类霜天竞自由。","title":"沁园春·长沙","author":"毛泽东","before":"漫江碧透，百舸争流。","after":"怅寥廓，问苍茫大地，谁主沉浮？","wenyan":"tb-word-0b87ebe912043b86","example":0,"biology":"anki-1709448774428-c1"},{"img":"scenes/3.jpg","line":"落霞与孤鹜齐飞，秋水共长天一色。","title":"滕王阁序","author":"王勃","before":"云销雨霁，彩彻区明。","after":"渔舟唱晚，响穷彭蠡之滨；","wenyan":"gk-shi-094","example":1,"biology":"anki-1711891131762-c1"},{"img":"scenes/4.jpg","line":"苍山负雪，明烛天南。","title":"登泰山记","author":"姚鼐","before":"道中迷雾冰滑，磴几不可登。","after":"望晚日照城郭，汶水、徂徕如画，而半山居雾若带然。","wenyan":"gk-shi-024","example":0,"biology":"anki-1705239513498-c1"},{"img":"scenes/5.jpg","line":"稍见云中白若樗蒱数十立者，山也。","title":"登泰山记","author":"姚鼐","before":"亭东自足下皆云漫。","after":"极天云一线异色，须臾成五采。","wenyan":"tb-word-90b457b876ebb57d","example":0,"biology":"anki-1710075028066-c1"},{"img":"scenes/6.jpg","line":"此地有崇山峻岭，茂林修竹，又有清流激湍，映带左右。","title":"兰亭集序","author":"王羲之","before":"群贤毕至，少长咸集。","after":"虽无丝竹管弦之盛，一觞一咏，亦足以畅叙幽情。","wenyan":"tb-word-0dc60a3ba99c7868","example":0,"biology":"anki-supp-x2-direct-basic"}]
+[
+ {
+  "img": "paintings/gushi-01.jpg",
+  "line": "无边落木萧萧下，不尽长江滚滚来。",
+  "title": "登高",
+  "author": "杜甫",
+  "before": "风急天高猿啸哀，渚清沙白鸟飞回。",
+  "after": "万里悲秋常作客，百年多病独登台。"
+ },
+ {
+  "img": "paintings/gushi-02.jpg",
+  "line": "楼船夜雪瓜洲渡，铁马秋风大散关。",
+  "title": "书愤",
+  "author": "陆游",
+  "before": "早岁那知世事艰，中原北望气如山。",
+  "after": "塞上长城空自许，镜中衰鬓已先斑。"
+ },
+ {
+  "img": "paintings/gushi-03.jpg",
+  "line": "叶上初阳干宿雨、水面清圆，一一风荷举。",
+  "title": "苏幕遮·燎沉香",
+  "author": "周邦彦",
+  "before": "鸟雀呼晴，侵晓窥檐语。",
+  "after": "故乡遥，何日去？"
+ },
+ {
+  "img": "paintings/gushi-04.jpg",
+  "line": "暧暧远人村，依依墟里烟。",
+  "title": "归园田居·其一",
+  "author": "陶渊明",
+  "before": "榆柳荫后檐，桃李罗堂前。",
+  "after": "狗吠深巷中，鸡鸣桑树颠。"
+ },
+ {
+  "img": "paintings/gushi-05.jpg",
+  "line": "连峰去天不盈尺，枯松倒挂倚绝壁。",
+  "title": "蜀道难",
+  "author": "李白",
+  "before": "蜀道之难，难于上青天，使人听此凋朱颜！",
+  "after": "飞湍瀑流争喧豗，砯崖转石万壑雷。"
+ },
+ {
+  "img": "paintings/gushi-06.jpg",
+  "line": "飞湍瀑流争喧豗，砯崖转石万壑雷。",
+  "title": "蜀道难",
+  "author": "李白",
+  "before": "连峰去天不盈尺，枯松倒挂倚绝壁。",
+  "after": "其险也如此，嗟尔远道之人胡为乎来哉！"
+ },
+ {
+  "img": "paintings/gushi-07.jpg",
+  "line": "江天一色无纤尘，皎皎空中孤月轮。",
+  "title": "春江花月夜",
+  "author": "张若虚",
+  "before": "空里流霜不觉飞，汀上白沙看不见。",
+  "after": "江畔何人初见月？"
+ },
+ {
+  "img": "paintings/gushi-08.jpg",
+  "line": "小楼一夜听春雨，深巷明朝卖杏花。",
+  "title": "临安春雨初霁",
+  "author": "陆游",
+  "before": "世味年来薄似纱，谁令骑马客京华。",
+  "after": "矮纸斜行闲作草，晴窗细乳戏分茶。"
+ },
+ {
+  "img": "paintings/gushi-09.jpg",
+  "line": "纵一苇之所如，凌万顷之茫然。",
+  "title": "赤壁赋",
+  "author": "苏轼",
+  "before": "白露横江，水光接天。",
+  "after": "浩浩乎如冯虚御风，而不知其所止；"
+ },
+ {
+  "img": "paintings/gushi-10.jpg",
+  "line": "想当年，金戈铁马，气吞万里如虎。",
+  "title": "永遇乐·京口北固亭怀古",
+  "author": "辛弃疾",
+  "before": "斜阳草树，寻常巷陌，人道寄奴曾住。",
+  "after": "元嘉草草，封狼居胥，赢得仓皇北顾。"
+ },
+ {
+  "img": "paintings/gushi-11.jpg",
+  "line": "舍南舍北皆春水，但见群鸥日日来。",
+  "title": "客至",
+  "author": "杜甫",
+  "before": "",
+  "after": "花径不曾缘客扫，蓬门今始为君开。"
+ },
+ {
+  "img": "paintings/gushi-12.jpg",
+  "line": "我欲因之梦吴越，一夜飞度镜湖月。",
+  "title": "梦游天姥吟留别",
+  "author": "李白",
+  "before": "天台四万八千丈，对此欲倒东南倾。",
+  "after": "湖月照我影，送我至剡溪。"
+ },
+ {
+  "img": "paintings/gushi-13.jpg",
+  "line": "青山遮不住，毕竟东流去。",
+  "title": "菩萨蛮·书江西造口壁",
+  "author": "辛弃疾",
+  "before": "西北望长安，可怜无数山。",
+  "after": "江晚正愁余，山深闻鹧鸪。"
+ },
+ {
+  "img": "paintings/gushi-14.jpg",
+  "line": "晓来谁染霜林醉？总是离人泪。",
+  "title": "长亭送别·端正好",
+  "author": "王实甫",
+  "before": "碧云天，黄花地，西风紧，北雁南飞。",
+  "after": ""
+ },
+ {
+  "img": "paintings/gushi-15.jpg",
+  "line": "舳舻千里，旌旗蔽空，酾酒临江，横槊赋诗",
+  "title": "赤壁赋",
+  "author": "苏轼",
+  "before": "方其破荆州，下江陵，顺流而东也，",
+  "after": "固一世之雄也，而今安在哉？"
+ },
+ {
+  "img": "paintings/gushi-16.jpg",
+  "line": "千里澄江似练，翠峰如簇。",
+  "title": "桂枝香·金陵怀古",
+  "author": "王安石",
+  "before": "登临送目，正故国晚秋，天气初肃。",
+  "after": "归帆去棹残阳里，背西风、酒旗斜矗。"
+ },
+ {
+  "img": "paintings/gushi-17.jpg",
+  "line": "桑之未落，其叶沃若。",
+  "title": "氓",
+  "author": "《诗经·卫风》",
+  "before": "以尔车来，以我贿迁。",
+  "after": "于嗟鸠兮，无食桑葚！"
+ },
+ {
+  "img": "paintings/gushi-18.jpg",
+  "line": "尽挹西江，细斟北斗，万象为宾客。",
+  "title": "念奴娇·过洞庭",
+  "author": "张孝祥",
+  "before": "短发萧骚襟袖冷，稳泛沧浪空阔。",
+  "after": "扣舷独啸，不知今夕何夕。"
+ },
+ {
+  "img": "paintings/gushi-19.jpg",
+  "line": "廊腰缦回，檐牙高啄",
+  "title": "阿房宫赋",
+  "author": "杜牧",
+  "before": "五步一楼，十步一阁；",
+  "after": "各抱地势，钩心斗角。"
+ },
+ {
+  "img": "paintings/gushi-20.jpg",
+  "line": "沧海月明珠有泪，蓝田日暖玉生烟。",
+  "title": "锦瑟",
+  "author": "李商隐",
+  "before": "庄生晓梦迷蝴蝶，望帝春心托杜鹃。",
+  "after": "此情可待成追忆，只是当时已惘然。"
+ }
+]

@@ -91,7 +91,7 @@ object Content {
         Scene(
             it.getString("img"), it.getString("line"),
             Passage(it.getString("title"), it.getString("author"), it.getString("before"), it.getString("line"), it.getString("after")),
-            listOf(Subject.WENYAN, Subject.BIOLOGY).associateWith { s -> it.getString(s.key) }, it.getInt("example"),
+            listOf(Subject.WENYAN, Subject.BIOLOGY).associateWith { s -> it.optString(s.key) }, it.optInt("example"),
         )
     }.also { scenes = it }
 
