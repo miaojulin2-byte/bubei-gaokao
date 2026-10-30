@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -47,6 +48,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -73,8 +75,16 @@ private val bioScenes = listOf(
     BioScene("backdrops/bee.jpg", "anki-1710078823969-c1"),
 )
 
-/** 文言首页每天一个必修课文里的常考实词（至少三个例句），隔天换一个，例句也按天轮换。 */
+/**
+ * 文言首页每天一个必修课文里的常考实词。画好插图的词优先，例句用插图画的那一句；
+ * 其余的词（至少三个例句）隔天换一个，例句按天轮换。
+ */
 private fun dailyWord(app: AppState): Pair<Card.Word, Int>? {
+    val illustrated = illustratedCards(app.context).mapNotNull { app.content(Subject.WENYAN).byId[it] as? Card.Word }
+    if (illustrated.isNotEmpty()) {
+        val word = illustrated[(app.day % illustrated.size).toInt()]
+        return word to (loadIllustration(app.context, word.id)?.example ?: 0)
+    }
     val words = app.content(Subject.WENYAN).cards.filterIsInstance<Card.Word>()
         .filter { it.pos == "实词" && it.examples.size >= 3 && it.deck.startsWith("必修") }
     val word = words.getOrNull(((app.day * 37) % words.size.coerceAtLeast(1)).toInt()) ?: return null
@@ -171,7 +181,10 @@ private fun SubjectPage(
         // 背景只移动页面位移的一半左右，形成视差。
         Box(Modifier.fillMaxSize().graphicsLayer { translationX = offset * size.width * 0.55f }) {
             when (s) {
-                Subject.WENYAN -> InkLandscape(motifsOf(word?.let { (w, i) -> w.exampleFor(i)?.sentence }.orEmpty()))
+                Subject.WENYAN -> InkLandscape(
+                    motifsOf(word?.let { (w, i) -> w.exampleFor(i)?.sentence }.orEmpty()),
+                    foreground = word?.let { loadIllustration(app.context, it.first.id) } == null,
+                )
                 Subject.GUSHI -> DriftingPhoto(app.scene(Subject.GUSHI).image)
                 Subject.BIOLOGY -> if (bio.image == null) DnaHelix() else DriftingPhoto(bio.image)
             }
@@ -195,7 +208,10 @@ private fun SubjectPage(
                 Subject.GUSHI -> GushiFeature(app, app.scene(Subject.GUSHI), onOpenCard, onOpenPassage)
                 Subject.BIOLOGY -> (app.content(Subject.BIOLOGY).byId[bio.cardId] as? Card.Cloze)?.let { BiologyFeature(it) { onOpenCard(it, 0) } }
             }
-            Spacer(Modifier.weight(1f))
+            // 文言词义插图：铺满屏宽，底边贴着 Learn/Review 卡片。
+            if (s == Subject.WENYAN && word != null && loadIllustration(app.context, word.first.id) != null) {
+                IllustrationView(word.first.id, Modifier.weight(1f).requiredWidth(LocalConfiguration.current.screenWidthDp.dp).padding(bottom = 8.dp))
+            } else Spacer(Modifier.weight(1f))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StudyCard("Learn", "新学", overview.newLeft, s.accent(false), Modifier.weight(1f)) { app.startLearn(s) }
                 StudyCard("Review", "复习", overview.due, s.accent(false), Modifier.weight(1f)) { app.startReview(s) }

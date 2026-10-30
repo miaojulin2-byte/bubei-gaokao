@@ -78,7 +78,7 @@ fun motifsOf(sentence: String): Set<Motif> =
  * 再按例句语境添景：月夜、风雪、雨、江上小舟、飞鸟、军旗、城楼、柳枝、落花。全是程序画的。
  */
 @Composable
-fun InkLandscape(motifs: Set<Motif>, modifier: Modifier = Modifier) {
+fun InkLandscape(motifs: Set<Motif>, foreground: Boolean = true, modifier: Modifier = Modifier) {
     val transition = rememberInfiniteTransition(label = "ink")
     val t by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(90_000, easing = LinearEasing)), label = "t")
     val bob by transition.animateFloat(0f, 1f, infiniteRepeatable(tween(4_200, easing = LinearEasing)), label = "bob")
@@ -106,8 +106,12 @@ fun InkLandscape(motifs: Set<Motif>, modifier: Modifier = Modifier) {
             // 朱砂色的日头，落在远山后面，露出半个。
             drawCircle(Color(0xFFC2452D).copy(alpha = 0.72f), radius = w * 0.06f, center = Offset(w * 0.78f, h * 0.47f))
         }
-        val water = Motif.WATER in motifs
-        val layers = listOf(
+        // 有插图时近处的山和江面交给插图画，这里只画远山。
+        val water = foreground && Motif.WATER in motifs
+        val layers = if (!foreground) listOf(
+            Layer(0.50f, 0.11f, Color(0xFF9FA7A6), 0.3f, 1, 0.3f),
+            Layer(0.55f, 0.10f, Color(0xFF6E7775), 0.38f, 2, 1.1f),
+        ) else listOf(
             Layer(0.52f, 0.11f, Color(0xFF9FA7A6), 0.32f, 1, 0.3f),
             Layer(0.56f, 0.12f, Color(0xFF6E7775), 0.5f, 2, 1.1f),
             Layer(0.61f, 0.10f, Color(0xFF454B49), 0.7f, 3, 2.3f),
