@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -108,7 +109,15 @@ fun HomeScreen(app: AppState, onOpenCard: (Card, Int) -> Unit, onOpenPassage: (S
                 StudyCard("Learn", "新学", overview.newLeft, Modifier.weight(1f)) { app.startLearn() }
                 StudyCard("Review", "复习", overview.due, Modifier.weight(1f)) { app.startReview() }
             }
-            Spacer(Modifier.height(16.dp))
+            // 底栏：三个线条图标，直接画在风景图上。
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(top = 18.dp, bottom = 6.dp),
+            ) {
+                NavIcon(BookIcon, "书库") { app.tab = Tab.BOOKS }
+                NavIcon(StarIcon, "收藏夹") { app.page = Page.STARS }
+                NavIcon(PersonIcon, "我的") { app.tab = Tab.ME }
+            }
         }
     }
 }
@@ -178,6 +187,16 @@ private fun Featured(app: AppState, scene: Scene, modifier: Modifier, onOpenCard
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun NavIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.size(48.dp).clip(RoundedCornerShape(50)).clickable(onClick = onClick),
+    ) {
+        Icon(icon, contentDescription = label, tint = Color.White, modifier = Modifier.size(26.dp))
     }
 }
 

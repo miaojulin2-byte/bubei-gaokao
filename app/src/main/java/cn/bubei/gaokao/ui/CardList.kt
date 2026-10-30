@@ -119,16 +119,11 @@ fun SearchScreen(app: AppState, onOpen: (Card) -> Unit) {
 
 @Composable
 fun StarsScreen(app: AppState, onOpen: (Card) -> Unit) {
-    BackHandler { app.page = null }
     @Suppress("UNUSED_EXPRESSION") app.version
     var filter by remember { mutableStateOf<Subject?>(null) }
     val starred = app.store.starred()
     val cards = starred.filter { filter == null || it.first == filter }.mapNotNull { (s, id) -> app.content(s).byId[id] }
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().navigationBarsPadding()) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 4.dp, top = 4.dp)) {
-            IconButton(onClick = { app.page = null }) { Icon(Icons.Default.ArrowBack, contentDescription = "返回") }
-            Text("收藏夹", fontSize = 18.sp)
-        }
+    Column(Modifier.fillMaxSize().navigationBarsPadding()) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
             (listOf<Subject?>(null) + Subject.entries).forEach { s ->
                 val n = starred.count { s == null || it.first == s }

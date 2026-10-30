@@ -1,6 +1,17 @@
 package cn.bubei.gaokao.ui
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextAlign
+import java.time.YearMonth
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -14,7 +25,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -45,8 +56,7 @@ fun MeScreen(app: AppState) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     val activity = app.store.activity()
     val today = app.day
-    val streak = generateSequence(if (activity.containsKey(today)) today else today - 1) { it - 1 }
-        .takeWhile { activity.containsKey(it) }.count()
+    val streak = streak(activity, today)
     val context = app.context
     var pendingImport by remember { mutableStateOf<String?>(null) }
     var confirmReset by remember { mutableStateOf(false) }
@@ -62,15 +72,19 @@ fun MeScreen(app: AppState) {
         pendingImport = runCatching { context.contentResolver.openInputStream(uri)!!.use { it.readBytes().decodeToString() } }.getOrNull()
     }
 
-    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().verticalScroll(rememberScrollState())) {
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).navigationBarsPadding()) {
         Panel {
             Row {
-                Stat("连续学习", "$streak 天", Modifier.weight(1f))
-                Stat("累计学习", "${activity.size} 天", Modifier.weight(1f))
-                Stat("今日作答", "${activity[today] ?: 0} 次", Modifier.weight(1f))
+                Stat("今日作答", "${activity[today] ?: 0}", "次", Modifier.weight(1f))
+                Stat("累计学习", "${activity.size}", "天", Modifier.weight(1f))
             }
-            Spacer(Modifier.padding(top = 18.dp))
-            Calendar(activity, today)
+        }
+        Panel {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().clickable { app.page = Page.CALENDAR }) {
+                Text("学习日历", fontSize = 16.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                Text("连续学习 $streak 天  ›", color = muted, fontSize = 13.sp)
+            }
+            WeekStrip(activity, today, Modifier.padding(top = 16.dp))
         }
         Panel {
             Text("各科进度", color = muted, fontSize = 13.sp)
@@ -167,36 +181,114 @@ private fun ResetDialog(app: AppState, onDone: () -> Unit) {
 }
 
 @Composable
-private fun Stat(label: String, value: String, modifier: Modifier) {
+private fun Stat(label: String, value: String, unit: String, modifier: Modifier) {
     Column(modifier) {
-        Text(value, fontSize = 22.sp, fontWeight = FontWeight.Medium)
-        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+        Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
+        Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.padding(top = 4.dp)) {
+            Text(value, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+            Text(unit, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, modifier = Modifier.padding(start = 3.dp, bottom = 4.dp))
+        }
     }
 }
 
-/** 最近 5 周的学习日历，颜色深浅表示当天作答次数。 */
+private val weekLabels = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
+
+/** 连续学习天数：今天还没学时从昨天往前数。 */
+fun streak(activity: Map<Long, Int>, today: Long): Int =
+    generateSequence(if (activity.containsKey(today)) today else today - 1) { it - 1 }.takeWhile { activity.containsKey(it) }.count()
+
+/** 本周一到周日，照不背单词“签到日历”卡片：学过的日子实心圆，今天写“今”。 */
 @Composable
-private fun Calendar(activity: Map<Long, Int>, today: Long) {
-    val accent = MaterialTheme.colorScheme.primary
-    val empty = MaterialTheme.colorScheme.surfaceContainerHigh
-    val weekday = LocalDate.ofEpochDay(today).dayOfWeek.value - 1
-    val start = today - weekday - 28
-    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            "一二三四五六日".forEach {
-                Text(it.toString(), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp, modifier = Modifier.weight(1f), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-            }
+private fun WeekStrip(activity: Map<Long, Int>, today: Long, modifier: Modifier) {
+    val monday = today - (LocalDate.ofEpochDay(today).dayOfWeek.value - 1)
+    Column(modifier) {
+        WeekHeader(today - monday)
+        Row(Modifier.padding(top = 10.dp)) {
+            for (i in 0 until 7) Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { DayDot(monday + i, activity, today) }
         }
-        for (week in 0 until 5) Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            for (d in 0 until 7) {
-                val day = start + week * 7 + d
-                val n = activity[day] ?: 0
-                val color = when {
-                    day > today -> empty.copy(alpha = 0.4f)
-                    n == 0 -> empty
-                    else -> accent.copy(alpha = (0.3f + n / 120f).coerceAtMost(1f))
+    }
+}
+
+@Composable
+private fun WeekHeader(todayIndex: Long?) {
+    Row {
+        weekLabels.forEachIndexed { i, label ->
+            Text(
+                label, fontSize = 10.sp, textAlign = TextAlign.Center, modifier = Modifier.weight(1f),
+                color = if (i.toLong() == todayIndex) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DayDot(day: Long, activity: Map<Long, Int>, today: Long) {
+    val accent = MaterialTheme.colorScheme.primary
+    val studied = activity.containsKey(day)
+    val filled = studied || day == today
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.size(32.dp).clip(CircleShape)
+            .background(if (day == today && !studied) accent.copy(alpha = 0.18f) else if (filled) accent else Color.Transparent),
+    ) {
+        Text(
+            if (day == today) "今" else LocalDate.ofEpochDay(day).dayOfMonth.toString(),
+            fontSize = 15.sp, fontWeight = FontWeight.Medium,
+            color = when {
+                studied -> Color.White
+                day == today -> accent
+                day > today -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)
+                else -> MaterialTheme.colorScheme.onSurface
+            },
+        )
+    }
+}
+
+/** 学习日历整页：按月翻，下面是连续和累计天数。 */
+@Composable
+fun CalendarPage(app: AppState) {
+    BackHandler { app.page = null }
+    val activity = app.store.activity()
+    val today = app.day
+    val thisMonth = YearMonth.from(LocalDate.ofEpochDay(today))
+    val first = activity.keys.minOrNull()?.let { YearMonth.from(LocalDate.ofEpochDay(it)) } ?: thisMonth
+    var month by remember { mutableStateOf(thisMonth) }
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().navigationBarsPadding()) {
+        Box(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
+            IconButton(onClick = { app.page = null }, modifier = Modifier.align(Alignment.CenterStart)) {
+                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "返回")
+            }
+            Text("学习日历", fontSize = 17.sp, fontWeight = FontWeight.Medium, modifier = Modifier.align(Alignment.Center))
+        }
+        Panel {
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                val canBack = month > first
+                val canForward = month < thisMonth
+                Text("‹", fontSize = 26.sp, color = if (canBack) muted else muted.copy(alpha = 0.3f),
+                    modifier = Modifier.clip(CircleShape).clickable(enabled = canBack) { month = month.minusMonths(1) }.padding(horizontal = 14.dp))
+                Text("${month.year}年${month.monthValue}月", fontSize = 17.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(horizontal = 12.dp))
+                Text("›", fontSize = 26.sp, color = if (canForward) muted else muted.copy(alpha = 0.3f),
+                    modifier = Modifier.clip(CircleShape).clickable(enabled = canForward) { month = month.plusMonths(1) }.padding(horizontal = 14.dp))
+            }
+            HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
+            val todayIndex = if (month == thisMonth) (LocalDate.ofEpochDay(today).dayOfWeek.value - 1).toLong() else null
+            WeekHeader(todayIndex)
+            val start = month.atDay(1).toEpochDay()
+            val lead = month.atDay(1).dayOfWeek.value - 1
+            val cells = lead + month.lengthOfMonth()
+            for (week in 0 until (cells + 6) / 7) Row(Modifier.padding(top = 14.dp)) {
+                for (d in 0 until 7) {
+                    val index = week * 7 + d - lead
+                    Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        if (index in 0 until month.lengthOfMonth()) DayDot(start + index, activity, today)
+                        else Spacer(Modifier.size(32.dp))
+                    }
                 }
-                Box(Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(5.dp)).background(color))
+            }
+            Row(Modifier.padding(top = 32.dp)) {
+                Stat("连续学习", "${streak(activity, today)}", "天", Modifier.weight(1f))
+                Stat("累计学习", "${activity.size}", "天", Modifier.weight(1f))
             }
         }
     }

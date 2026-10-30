@@ -17,7 +17,7 @@ import cn.bubei.gaokao.data.today
 enum class Tab { HOME, BOOKS, ME }
 
 /** 盖在主界面上的整页：搜索、收藏夹。 */
-enum class Page { SEARCH, STARS }
+enum class Page { SEARCH, STARS, CALENDAR }
 
 /** 界面状态。数据都在 Store 里，这里只保存当前在看哪一页，以及让界面刷新的版本号。 */
 class AppState(val context: Context) {
