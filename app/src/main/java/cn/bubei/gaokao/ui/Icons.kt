@@ -26,11 +26,16 @@ val BookIcon = lineIcon("book") {
     moveTo(12f, 6.5f); verticalLineTo(20f)
 }
 
-/** 五角星。 */
-val StarIcon = lineIcon("star") {
-    moveTo(12f, 3.5f)
-    lineTo(14.6f, 8.9f); lineTo(20.5f, 9.6f); lineTo(16.1f, 13.6f); lineTo(17.3f, 19.5f)
-    lineTo(12f, 16.6f); lineTo(6.7f, 19.5f); lineTo(7.9f, 13.6f); lineTo(3.5f, 9.6f); lineTo(9.4f, 8.9f); close()
+/** 本子：带书脊线和两道横线的小册子。 */
+val NotebookIcon = lineIcon("notebook") {
+    moveTo(6.5f, 3.5f); horizontalLineTo(18f)
+    curveTo(18.8f, 3.5f, 19.5f, 4.2f, 19.5f, 5f); verticalLineTo(19f)
+    curveTo(19.5f, 19.8f, 18.8f, 20.5f, 18f, 20.5f); horizontalLineTo(6.5f)
+    curveTo(5.7f, 20.5f, 5f, 19.8f, 5f, 19f); verticalLineTo(5f)
+    curveTo(5f, 4.2f, 5.7f, 3.5f, 6.5f, 3.5f); close()
+    moveTo(8.5f, 3.5f); verticalLineTo(20.5f)
+    moveTo(11.5f, 8.5f); horizontalLineTo(16.5f)
+    moveTo(11.5f, 12f); horizontalLineTo(15f)
 }
 
 /** 人像。 */

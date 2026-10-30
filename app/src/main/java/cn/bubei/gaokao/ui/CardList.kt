@@ -117,24 +117,6 @@ fun SearchScreen(app: AppState, onOpen: (Card) -> Unit) {
     }
 }
 
-@Composable
-fun StarsScreen(app: AppState, onOpen: (Card) -> Unit) {
-    @Suppress("UNUSED_EXPRESSION") app.version
-    var filter by remember { mutableStateOf<Subject?>(null) }
-    val starred = app.store.starred()
-    val cards = starred.filter { filter == null || it.first == filter }.mapNotNull { (s, id) -> app.content(s).byId[id] }
-    Column(Modifier.fillMaxSize().navigationBarsPadding()) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
-            (listOf<Subject?>(null) + Subject.entries).forEach { s ->
-                val n = starred.count { s == null || it.first == s }
-                Chip("${s?.short ?: "全部"} $n", s == filter) { filter = s }
-            }
-        }
-        if (cards.isEmpty()) Empty("还没有收藏")
-        CardList(app, cards, onOpen)
-    }
-}
-
 val Subject.short get() = when (this) { Subject.WENYAN -> "文言"; Subject.GUSHI -> "古诗文"; Subject.BIOLOGY -> "生物" }
 
 @Composable
@@ -149,12 +131,12 @@ fun Chip(text: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun Empty(text: String) {
+fun Empty(text: String) {
     Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp, modifier = Modifier.fillMaxWidth().padding(top = 48.dp), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
 }
 
 @Composable
-private fun CardList(app: AppState, cards: List<Card>, onOpen: (Card) -> Unit) {
+fun CardList(app: AppState, cards: List<Card>, onOpen: (Card) -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     LazyColumn(Modifier.fillMaxSize()) {
         items(cards, key = { it.id }) { card ->
@@ -176,21 +158,9 @@ private fun CardList(app: AppState, cards: List<Card>, onOpen: (Card) -> Unit) {
                     }
                     Text(card.summary(), color = muted, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp))
                 }
-                StarButton(app, card)
+                SaveButton(app, card)
             }
             HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
         }
-    }
-}
-
-/** 收藏开关，用在学习页、详情页和列表里。 */
-@Composable
-fun StarButton(app: AppState, card: Card) {
-    val starred = app.isStarred(card)
-    IconButton(onClick = { app.toggleStar(card) }) {
-        Text(
-            if (starred) "★" else "☆", fontSize = 22.sp,
-            color = if (starred) androidx.compose.ui.graphics.Color(0xFFE0A526) else MaterialTheme.colorScheme.onSurfaceVariant,
-        )
     }
 }

@@ -11,6 +11,8 @@ import java.time.LocalDateTime
 /** 学习日在凌晨 4 点切换，熬夜学习仍算前一天。 */
 fun today(): Long = LocalDateTime.now().minusHours(4).toLocalDate().toEpochDay()
 
+data class Notebook(val id: Long, val name: String, val count: Int)
+
 data class MemoryRow(
     val cardId: String, val stability: Double, val difficulty: Double,
     val lastDay: Long, val dueDay: Long, val reps: Int, val lapses: Int,
@@ -18,7 +20,7 @@ data class MemoryRow(
     val memory get() = Fsrs.Memory(stability, difficulty)
 }
 
-class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 2) {
+class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 3) {
     private val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -32,15 +34,35 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 2) {
                subject TEXT NOT NULL, card_id TEXT NOT NULL, grade INTEGER NOT NULL, is_new INTEGER NOT NULL)"""
         )
         db.execSQL("CREATE INDEX log_day ON log(day, subject)")
-        createStar(db)
+        createNotebooks(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        if (oldVersion < 2) createStar(db)
+        if (oldVersion < 3) {
+            createNotebooks(db)
+            // v2 的收藏放进一个本子。
+            if (oldVersion == 2) {
+                val stars = db.rawQuery("SELECT card_id, subject, ts FROM star", null).use { c ->
+                    buildList { while (c.moveToNext()) add(Triple(c.getString(0), c.getString(1), c.getLong(2))) }
+                }
+                if (stars.isNotEmpty()) {
+                    val id = db.insert("notebook", null, ContentValues().apply { put("name", "我的本子"); put("ts", System.currentTimeMillis()) })
+                    for ((card, subject, ts) in stars) db.insert("notebook_card", null, ContentValues().apply {
+                        put("notebook_id", id); put("card_id", card); put("subject", subject); put("ts", ts)
+                    })
+                }
+                db.execSQL("DROP TABLE star")
+            }
+        }
     }
 
-    private fun createStar(db: SQLiteDatabase) =
-        db.execSQL("CREATE TABLE star(card_id TEXT PRIMARY KEY, subject TEXT NOT NULL, ts INTEGER NOT NULL)")
+    private fun createNotebooks(db: SQLiteDatabase) {
+        db.execSQL("CREATE TABLE notebook(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, ts INTEGER NOT NULL)")
+        db.execSQL(
+            """CREATE TABLE notebook_card(notebook_id INTEGER NOT NULL, card_id TEXT NOT NULL, subject TEXT NOT NULL,
+               ts INTEGER NOT NULL, PRIMARY KEY(notebook_id, card_id))"""
+        )
+    }
 
     // ---- 设置 ----
 
@@ -63,27 +85,49 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 2) {
         get() = prefs.getInt("gaokao_year", 2028)
         set(value) = prefs.edit().putInt("gaokao_year", value).apply()
 
-    // ---- 收藏 ----
+    // ---- 本子 ----
 
-    /** 收藏的卡片，最近收藏的在前。 */
-    fun starred(): List<Pair<Subject, String>> = readableDatabase.rawQuery("SELECT subject, card_id FROM star ORDER BY ts DESC", null).use { c ->
-        buildList {
-            while (c.moveToNext()) Subject.entries.firstOrNull { it.key == c.getString(0) }?.let { add(it to c.getString(1)) }
-        }
+    /** 本子按新建顺序排列。 */
+    fun notebooks(): List<Notebook> = readableDatabase.rawQuery(
+        "SELECT n.id, n.name, COUNT(c.card_id) FROM notebook n LEFT JOIN notebook_card c ON c.notebook_id = n.id GROUP BY n.id ORDER BY n.ts",
+        null,
+    ).use { c -> buildList { while (c.moveToNext()) add(Notebook(c.getLong(0), c.getString(1), c.getInt(2))) } }
+
+    fun createNotebook(name: String): Long = writableDatabase.insert("notebook", null, ContentValues().apply {
+        put("name", name); put("ts", System.currentTimeMillis())
+    })
+
+    fun renameNotebook(id: Long, name: String) {
+        writableDatabase.update("notebook", ContentValues().apply { put("name", name) }, "id=?", arrayOf(id.toString()))
     }
 
-    fun isStarred(cardId: String) = count("SELECT COUNT(*) FROM star WHERE card_id=?", cardId) > 0
+    fun deleteNotebook(id: Long) {
+        writableDatabase.delete("notebook_card", "notebook_id=?", arrayOf(id.toString()))
+        writableDatabase.delete("notebook", "id=?", arrayOf(id.toString()))
+    }
 
-    fun toggleStar(s: Subject, cardId: String) {
-        if (isStarred(cardId)) writableDatabase.delete("star", "card_id=?", arrayOf(cardId))
-        else writableDatabase.insert("star", null, ContentValues().apply {
-            put("card_id", cardId); put("subject", s.key); put("ts", System.currentTimeMillis())
-        })
+    /** 本子里的卡片，最近放进去的在前。 */
+    fun notebookCards(id: Long): List<Pair<Subject, String>> = readableDatabase.rawQuery(
+        "SELECT subject, card_id FROM notebook_card WHERE notebook_id=? ORDER BY ts DESC", arrayOf(id.toString()),
+    ).use { c ->
+        buildList { while (c.moveToNext()) Subject.entries.firstOrNull { it.key == c.getString(0) }?.let { add(it to c.getString(1)) } }
+    }
+
+    /** 这张卡在哪些本子里。 */
+    fun notebooksOf(cardId: String): Set<Long> = readableDatabase.rawQuery(
+        "SELECT notebook_id FROM notebook_card WHERE card_id=?", arrayOf(cardId),
+    ).use { c -> buildSet { while (c.moveToNext()) add(c.getLong(0)) } }
+
+    fun setInNotebook(id: Long, s: Subject, cardId: String, inside: Boolean) {
+        if (inside) writableDatabase.insertWithOnConflict("notebook_card", null, ContentValues().apply {
+            put("notebook_id", id); put("card_id", cardId); put("subject", s.key); put("ts", System.currentTimeMillis())
+        }, SQLiteDatabase.CONFLICT_IGNORE)
+        else writableDatabase.delete("notebook_card", "notebook_id=? AND card_id=?", arrayOf(id.toString(), cardId))
     }
 
     // ---- 学习记录 ----
 
-    /** 清空学习记录（s 为空时清空三科）。收藏和设置保留。 */
+    /** 清空学习记录（s 为空时清空三科）。本子和设置保留。 */
     fun reset(s: Subject?) {
         val db = writableDatabase
         db.beginTransaction()
@@ -184,7 +228,7 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 2) {
         for ((k, v) in prefs.all) settings.put(k, if (v is Set<*>) JSONArray(v.toList()) else v)
         return JSONObject()
             .put("app", "bubei-gaokao").put("version", 1)
-            .put("memory", table("memory")).put("log", table("log")).put("star", table("star")).put("settings", settings)
+            .put("memory", table("memory")).put("log", table("log")).put("notebook", table("notebook")).put("notebook_card", table("notebook_card")).put("settings", settings)
             .toString()
     }
 
@@ -194,14 +238,16 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 2) {
         require(json.optString("app") == "bubei-gaokao") { "不是不背高考的备份文件" }
         val memory = json.getJSONArray("memory")
         val log = json.getJSONArray("log")
-        val star = json.optJSONArray("star") ?: JSONArray()
+        val notebook = json.optJSONArray("notebook") ?: JSONArray()
+        val notebookCard = json.optJSONArray("notebook_card") ?: JSONArray()
         val db = writableDatabase
         db.beginTransaction()
         try {
             db.delete("memory", null, null)
             db.delete("log", null, null)
-            db.delete("star", null, null)
-            for (table in listOf("memory" to memory, "log" to log, "star" to star)) {
+            db.delete("notebook_card", null, null)
+            db.delete("notebook", null, null)
+            for (table in listOf("memory" to memory, "log" to log, "notebook" to notebook, "notebook_card" to notebookCard)) {
                 for (i in 0 until table.second.length()) {
                     val row = table.second.getJSONObject(i)
                     db.insertOrThrow(table.first, null, ContentValues().apply {

@@ -58,7 +58,7 @@ fun StudyScreen(app: AppState, session: Session) {
                 "${session.finished}/${session.total}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp,
                 modifier = Modifier.padding(start = 14.dp, end = 4.dp),
             )
-            session.current?.let { StarButton(app, it) }
+            session.current?.let { SaveButton(app, it) }
         }
         if (card == null) {
             Finished(app, session)
@@ -145,7 +145,7 @@ private fun Finished(app: AppState, session: Session) {
     }
 }
 
-/** 卡片详情（首页、搜索、收藏夹点进来）：只看不评分。 */
+/** 卡片详情（首页、搜索、本子点进来）：只看不评分。 */
 @Composable
 fun CardDetail(app: AppState, card: cn.bubei.gaokao.data.Card, exampleIndex: Int, onClose: () -> Unit) {
     BackHandler(onBack = onClose)
@@ -154,7 +154,7 @@ fun CardDetail(app: AppState, card: cn.bubei.gaokao.data.Card, exampleIndex: Int
         Row(Modifier.fillMaxWidth().padding(8.dp)) {
             IconButton(onClick = onClose) { Icon(Icons.Default.Close, contentDescription = "关闭") }
             Spacer(Modifier.weight(1f))
-            StarButton(app, card)
+            SaveButton(app, card)
         }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp).padding(bottom = 32.dp)) {
             CardBack(card, exampleIndex)

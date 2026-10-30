@@ -26,7 +26,9 @@ import cn.bubei.gaokao.ui.Page
 import cn.bubei.gaokao.ui.PassageDetail
 import cn.bubei.gaokao.ui.SearchScreen
 import cn.bubei.gaokao.ui.Sheet
-import cn.bubei.gaokao.ui.StarsScreen
+import cn.bubei.gaokao.ui.NotebookPage
+import cn.bubei.gaokao.ui.NotebookPicker
+import cn.bubei.gaokao.ui.NotebooksScreen
 import cn.bubei.gaokao.ui.StudyScreen
 import cn.bubei.gaokao.ui.Tab
 
@@ -41,17 +43,19 @@ class MainActivity : ComponentActivity() {
             GaokaoTheme(app.subject) {
                 var detail by remember { mutableStateOf<Pair<Card, Int>?>(null) }
                 var passage by remember { mutableStateOf<Passage?>(null) }
-                // 和不背单词一样：首页是底，书库、收藏夹、我的、学习都从底部滑上来盖住它，下拉或返回收起。
+                // 和不背单词一样：首页是底，书库、本子、我的、学习都从底部滑上来盖住它，下拉或返回收起。
                 Box(Modifier.fillMaxSize()) {
                     HomeScreen(app, { card, ex -> detail = card to ex }, { passage = it.passage })
                     Sheet(app.tab == Tab.BOOKS, "书库", onClose = { app.tab = Tab.HOME }) { BooksScreen(app) }
                     Sheet(app.tab == Tab.ME, "我的", onClose = { app.tab = Tab.HOME }) { MeScreen(app) }
-                    Sheet(app.page == Page.STARS, "收藏夹", onClose = { app.page = null }) { StarsScreen(app) { detail = it to 0 } }
+                    Sheet(app.page == Page.NOTEBOOKS, "我的本子", onClose = { app.page = null }) { NotebooksScreen(app) }
+                    Overlay(app.notebook, from = Edge.END) { NotebookPage(app, it) { card -> detail = card to 0 } }
                     Overlay(if (app.page == Page.CALENDAR) Unit else null, from = Edge.END) { CalendarPage(app) }
                     Overlay(if (app.page == Page.SEARCH) Unit else null, from = Edge.TOP) { SearchScreen(app) { detail = it to 0 } }
                     Overlay(app.session) { StudyScreen(app, it) }
                     Overlay(detail) { (card, ex) -> CardDetail(app, card, ex) { detail = null } }
                     Overlay(passage) { PassageDetail(it) { passage = null } }
+                    app.saving?.let { NotebookPicker(app, it) }
                 }
             }
         }

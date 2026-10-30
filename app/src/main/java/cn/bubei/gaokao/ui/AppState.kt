@@ -16,8 +16,8 @@ import cn.bubei.gaokao.data.today
 
 enum class Tab { HOME, BOOKS, ME }
 
-/** 盖在主界面上的整页：搜索、收藏夹。 */
-enum class Page { SEARCH, STARS, CALENDAR }
+/** 盖在主界面上的整页：搜索、我的本子、学习日历。 */
+enum class Page { SEARCH, NOTEBOOKS, CALENDAR }
 
 /** 界面状态。数据都在 Store 里，这里只保存当前在看哪一页，以及让界面刷新的版本号。 */
 class AppState(val context: Context) {
@@ -40,8 +40,14 @@ class AppState(val context: Context) {
     fun content(s: Subject = subject) = Content.of(context, s)
     fun planner(s: Subject = subject) = Planner(store, content(s))
     fun daysToExam() = daysToGaokao(day, store.gaokaoYear)
-    fun isStarred(card: Card): Boolean = version >= 0 && store.isStarred(card.id)
-    fun toggleStar(card: Card) { store.toggleStar(card.subject, card.id); changed() }
+    /** 卡片是否在任何一个本子里。读 version 让界面在本子变化后刷新。 */
+    fun isSaved(card: Card): Boolean = version >= 0 && store.notebooksOf(card.id).isNotEmpty()
+
+    /** 正在选“放进哪个本子”的卡片。 */
+    var saving by mutableStateOf<Card?>(null)
+
+    /** 正在看的本子。 */
+    var notebook by mutableStateOf<Long?>(null)
     /** 今天某科的首页风景。三科错开取图，同一天三科的图各不相同，每天轮换。 */
     fun scene(s: Subject = subject) = Content.scenes(context).let { scenes ->
         val offset = when (s) { Subject.WENYAN -> 0; Subject.GUSHI -> 3; Subject.BIOLOGY -> 5 }
@@ -53,11 +59,11 @@ class AppState(val context: Context) {
         store.subject = s
     }
 
-    fun startLearn() = start(planner().newQueue())
-    fun startReview() = start(planner().reviewQueue())
+    fun startLearn(s: Subject = subject) = start(s, planner(s).newQueue())
+    fun startReview(s: Subject = subject) = start(s, planner(s).reviewQueue())
 
-    private fun start(cards: List<Card>) {
-        if (cards.isNotEmpty()) session = Session(store, subject, cards)
+    private fun start(s: Subject, cards: List<Card>) {
+        if (cards.isNotEmpty()) session = Session(store, s, cards)
     }
 
     fun act(block: Session.() -> Unit) {

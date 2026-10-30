@@ -99,11 +99,11 @@ fun MeScreen(app: AppState) {
         Panel {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().clickable { app.page = Page.STARS }.padding(vertical = 4.dp),
+                modifier = Modifier.fillMaxWidth().clickable { app.page = Page.NOTEBOOKS }.padding(vertical = 4.dp),
             ) {
                 Text("★", color = androidx.compose.ui.graphics.Color(0xFFE0A526), fontSize = 18.sp, modifier = Modifier.padding(end = 10.dp))
-                Text("收藏夹", fontSize = 16.sp, modifier = Modifier.weight(1f))
-                Text("${app.store.starred().size}  ›", color = muted, fontSize = 15.sp)
+                Text("我的本子", fontSize = 16.sp, modifier = Modifier.weight(1f))
+                Text("${app.store.notebooks().size} 本  ›", color = muted, fontSize = 15.sp)
             }
             HorizontalDivider(Modifier.padding(vertical = 14.dp), color = MaterialTheme.colorScheme.outlineVariant)
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -169,7 +169,7 @@ private fun ResetDialog(app: AppState, onDone: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDone,
         title = { Text("重置学习记录？") },
-        text = { Text("已学的卡片会变回没学过，相应的学习日历记录也会删除，不能撤销。收藏和设置保留。") },
+        text = { Text("已学的卡片会变回没学过，相应的学习日历记录也会删除，不能撤销。本子和设置保留。") },
         confirmButton = {
             Column(horizontalAlignment = Alignment.End) {
                 TextButton(onClick = { reset(app.subject) }) { Text("只重置${app.subject.short}", color = MaterialTheme.colorScheme.error) }
