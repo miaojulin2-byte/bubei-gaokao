@@ -115,7 +115,7 @@ fun MeScreen(app: AppState) {
             }
         }
         Panel {
-            var retention by remember { mutableStateOf(app.store.retention.toFloat()) }
+            var retention by remember(app.version) { mutableStateOf(app.store.retention.toFloat()) }
             Text("目标记忆率 · 三科共用", color = muted, fontSize = 13.sp)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Slider(
