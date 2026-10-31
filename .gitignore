@@ -9,3 +9,6 @@ local.properties
 *.apk
 __pycache__/
 keystore.properties
+
+.kotlin/
+*.aab
