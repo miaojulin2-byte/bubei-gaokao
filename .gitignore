@@ -8,3 +8,4 @@ local.properties
 *.jks
 *.apk
 __pycache__/
+keystore.properties
