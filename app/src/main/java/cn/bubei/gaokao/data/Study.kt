@@ -21,7 +21,7 @@ private const val LONG_TERM_DAYS = 30.0
 class Planner(private val store: Store, private val content: SubjectContent) {
     private val subject = content.subject
 
-    private fun scope(): Set<String> = store.decks(subject).ifEmpty { content.decks.map { it.id }.toSet() }
+    private fun scope(): Set<String> = store.decks(subject) ?: content.decks.map { it.id }.toSet()
 
     fun overview(day: Long = today()): Overview {
         val memories = store.memories(subject)

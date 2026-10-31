@@ -152,7 +152,10 @@ fun CardBack(card: Card, exampleIndex: Int, picked: Int? = null, onOpenText: ((T
                 Section("其他例句")
                 others.forEach {
                     Text(highlight(it.sentence, card.word, accent), fontFamily = Serif, fontSize = 15.sp, lineHeight = 24.sp, modifier = Modifier.padding(top = 10.dp))
-                    Text("${it.meaning}  ·  《${it.title}》", color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+                    Row(Modifier.padding(top = 2.dp)) {
+                        Text("${it.meaning}  ·  ", color = muted, fontSize = 12.sp)
+                        SourceTitle("《${it.title}》", exampleSpot(it), onOpenText, fontSize = 12)
+                    }
                 }
             }
         }

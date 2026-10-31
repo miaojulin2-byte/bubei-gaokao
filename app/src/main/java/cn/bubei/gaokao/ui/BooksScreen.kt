@@ -105,11 +105,12 @@ private fun books(subject: Subject, decks: List<DeckProgress>): List<Book> = whe
 /** 书库里打开的一本书：科目、书名和它包含的分册或章节。 */
 class Shelf(val subject: Subject, val title: String, val decks: List<String>)
 
-/** 把分册或章节加入或移出新学范围；至少留一个。 */
+/** 把分册或章节加入或移出新学范围。可以一本都不选，那样就不安排新学，只复习。 */
 private fun selectDecks(app: AppState, subject: Subject, ids: Set<String>, on: Boolean) {
     val all = app.planner(subject).decks().filter { it.selected }.map { it.deck.id }.toMutableSet()
     if (on) all += ids else all -= ids
-    if (all.isNotEmpty()) { app.store.setDecks(subject, all); app.changed() }
+    app.store.setDecks(subject, all)
+    app.changed()
 }
 
 /** 书库：当前科目的计划和各册书，对应不背单词的“我的词书”。 */
@@ -164,17 +165,19 @@ fun BooksScreen(app: AppState) {
             }
         }
         item {
-            // 全部书籍：一键全选；全选时再点不取消（至少要留一本）。
+            // 全部书籍：没全选时点一下全选，已全选时点一下全部取消。
             val selected = decks.count { it.selected }
             val state = when (selected) { 0 -> ToggleableState.Off; decks.size -> ToggleableState.On; else -> ToggleableState.Indeterminate }
-            val toggle = { if (state != ToggleableState.On) select(decks.map { it.deck.id }.toSet(), true) }
+            val toggle = { select(decks.map { it.deck.id }.toSet(), state != ToggleableState.On) }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth().clickable(onClick = toggle).padding(start = 20.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
             ) {
                 Column(Modifier.weight(1f)) {
                     Text("全部书籍", fontSize = 16.sp, fontWeight = FontWeight.Medium)
-                    Text("${books.size} 本 · 已选 ${books.count { b -> b.decks.any { it.selected } }} 本", color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
+                    Text(
+                        "${books.size} 本 · " + if (selected == 0) "一本都没选，只复习不新学" else "已选 ${books.count { b -> b.decks.any { it.selected } }} 本",
+                        color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
                 }
                 TriStateCheckbox(state, onClick = toggle)
             }
@@ -194,10 +197,11 @@ fun BooksScreen(app: AppState) {
                 Column(Modifier.weight(1f).padding(start = 16.dp, end = 8.dp)) {
                     Text(book.title, fontSize = 16.sp, fontWeight = FontWeight.Medium)
                     Text(
-                        (if (chapters) "${book.decks.size} 章" else book.cover.volume.ifEmpty { "${book.count} ${subject.unit}" }) + "  ›",
-                        color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp),
+                        // 书名已经写了是哪一册，这里只写有多少、学了多少；真题和辨析按“题”数。
+                        (if (chapters) "${book.decks.size} 章 · " else "") + "${book.count} ${if (subject == Subject.WENYAN && book.cover.image == null) "题" else subject.unit}" +
+                            (if (book.learned > 0) " · 已学 ${book.learned}" else "") + "  ›",
+                        color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 4.dp),
                     )
-                    Progress(book.learned, book.count)
                 }
                 TriStateCheckbox(state, onClick = toggle)
             }
@@ -235,7 +239,7 @@ fun BookPage(app: AppState, shelf: Shelf, onOpen: (Card) -> Unit) {
                     ) {
                         Column(Modifier.weight(1f).padding(end = 8.dp)) {
                             Text(if (shelf.decks.size > 1) d.deck.title.substringAfter(" · ") else "加入新学范围", fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                            Progress(d.learned, d.deck.count)
+                            Text("${d.deck.count} 张 · 已学 ${d.learned}", color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp))
                         }
                         Checkbox(checked = d.selected, onCheckedChange = { selectDecks(app, shelf.subject, setOf(id), it) })
                     }
@@ -246,18 +250,6 @@ fun BookPage(app: AppState, shelf: Shelf, onOpen: (Card) -> Unit) {
             }
             item { Text("勾选的章节会排进每日新学", color = muted, fontSize = 12.sp, modifier = Modifier.padding(20.dp)) }
         }
-    }
-}
-
-@Composable
-private fun Progress(learned: Int, count: Int) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 6.dp)) {
-        LinearProgressIndicator(
-            progress = { learned.toFloat() / count.coerceAtLeast(1) },
-            modifier = Modifier.weight(1f).height(3.dp),
-            trackColor = MaterialTheme.colorScheme.surfaceContainerHigh, drawStopIndicator = {},
-        )
-        Text("$learned/$count", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, modifier = Modifier.padding(start = 10.dp))
     }
 }
 

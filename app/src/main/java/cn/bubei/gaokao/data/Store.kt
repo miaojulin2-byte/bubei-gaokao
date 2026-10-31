@@ -87,8 +87,8 @@ class Store(context: Context) : SQLiteOpenHelper(context, "study.db", null, 4) {
         get() = prefs.getFloat("retention", Subject.entries.maxOfOrNull { prefs.getFloat("retention_${it.key}", 0.9f) } ?: 0.9f).toDouble()
         set(value) = prefs.edit().putFloat("retention", value.toFloat()).apply()
 
-    /** 新学范围：选中的分册或章节。为空表示还没选过，按全部处理。 */
-    fun decks(s: Subject): Set<String> = prefs.getStringSet("decks_${s.key}", emptySet())!!.toSet()
+    /** 新学范围：选中的分册或章节。null 表示还没选过，按全部处理；空集合表示一本都没选。 */
+    fun decks(s: Subject): Set<String>? = prefs.getStringSet("decks_${s.key}", null)?.toSet()
     fun setDecks(s: Subject, decks: Set<String>) = prefs.edit().putStringSet("decks_${s.key}", decks).apply()
 
     /** 高考年份。默认 2028：2026 年秋季入读高二。 */

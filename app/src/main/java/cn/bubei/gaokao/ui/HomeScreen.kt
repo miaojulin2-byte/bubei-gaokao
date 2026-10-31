@@ -218,6 +218,8 @@ private fun SubjectPage(
     onOpenCard: (Card, Int) -> Unit, onOpenPassage: (Scene) -> Unit,
 ) {
     val offset = (pager.currentPage - page) + pager.currentPageOffsetFraction
+    // 读 version：学完一组、重置记录、改了新学范围后，待新学和待复习的数字跟着刷新。
+    @Suppress("UNUSED_EXPRESSION") app.version
     val overview = app.planner(s).overview()
     val word = remember(app.day) { dailyWord(app) }
     val bio = bioScenes[(app.day % bioScenes.size).toInt()]

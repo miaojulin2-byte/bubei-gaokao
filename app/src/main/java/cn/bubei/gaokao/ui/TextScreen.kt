@@ -32,6 +32,15 @@ import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cn.bubei.gaokao.data.WenyanText
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
@@ -45,7 +54,8 @@ import cn.bubei.gaokao.data.TextSpot
 import cn.bubei.gaokao.data.Texts
 
 /**
- * 课文全文，一句一行。点一句在它下面展开这一句的今译，再点收起；右上角可以一次展开全部，仍是逐句对照。
+ * 课文全文。文言课文按教材分段连排，段首空两格；点一句，这句加底色，它的今译出现在本段下面，再点收起。
+ * 右上角“全部译文”改成一句原文一句译文对照。古诗文没有译文，按默写粒度一句一行。
  * 从搜索或例句进来时，那几句着色、预先展开并滚到眼前。
  */
 @Composable
@@ -56,21 +66,21 @@ fun TextScreen(app: AppState, spot: TextSpot, onClose: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     var all by rememberSaveable { mutableStateOf(false) }
     val open: SnapshotStateList<Int> = remember(spot) { spot.marked.toMutableStateList() }
-    // 每句一项；段首前插一项空白作段距。第 0 项是篇名。
-    val rows = remember(text) {
-        buildList {
-            var i = 0
-            text.paragraphs.forEachIndexed { p, para ->
-                para.forEachIndexed { k, _ -> add(Triple(i++, k == 0, p > 0 && k == 0)) }
-            }
-        }
+    // 段落里每句在全文中的序号。
+    val paragraphs = remember(text) {
+        var i = 0
+        text.paragraphs.map { para -> para.map { i++ } }
     }
+    val lineMode = all || !text.translated
     val list = rememberLazyListState()
-    LaunchedEffect(spot) {
-        if (!spot.range.isEmpty() && spot.range.first > 0) list.scrollToItem((rows.indexOfFirst { it.first == spot.range.first } - 1).coerceAtLeast(0))
+    LaunchedEffect(spot, lineMode) {
+        val target = spot.range.firstOrNull() ?: return@LaunchedEffect
+        // 第 0 项是篇名；连排时滚到那一段的段首，逐句时让那一句上面留一句。
+        val index = if (lineMode) target else paragraphs.indexOfFirst { target in it } + 1
+        if (index > 1) list.scrollToItem(index)
     }
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().navigationBarsPadding()) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(start = 8.dp, end = 16.dp, top = 4.dp, bottom = 4.dp)) {
             IconButton(onClick = onClose) { Icon(Icons.Default.Close, contentDescription = "关闭") }
             Text(text.title, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             if (text.translated) Text(
@@ -78,7 +88,7 @@ fun TextScreen(app: AppState, spot: TextSpot, onClose: () -> Unit) {
                 color = if (all) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.clip(RoundedCornerShape(50))
                     .background(if (all) accent else MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .clickable { all = !all; if (!all) open.clear() }.padding(horizontal = 12.dp, vertical = 6.dp),
+                    .clickable { all = !all }.padding(horizontal = 12.dp, vertical = 6.dp),
             )
         }
         PullToSearch({ onClose(); app.page = Page.SEARCH }) {
@@ -87,25 +97,21 @@ fun TextScreen(app: AppState, spot: TextSpot, onClose: () -> Unit) {
                     Column(Modifier.padding(horizontal = 28.dp).padding(top = 12.dp, bottom = 8.dp)) {
                         Text(text.title, fontFamily = Serif, fontSize = 26.sp)
                         Text(listOf(text.author, text.volume).filter { it.isNotEmpty() }.joinToString("  ·  "), color = muted, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
-                        if (text.translated) Text("点一句看这一句的译文", color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 14.dp))
+                        if (text.translated && !all) Text("点一句看这一句的译文", color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 14.dp))
                     }
                 }
-                items(rows.size) { r ->
-                    val (i, first, gap) = rows[r]
+                if (lineMode) items(text.lines.size) { i ->
                     val line = text.lines[i]
-                    val shown = all || i in open
-                    if (gap) Spacer(Modifier.height(14.dp))
-                    Column(
-                        Modifier.fillMaxWidth().clickable(enabled = text.translated) { if (i in open) open.remove(i) else open.add(i) }
-                            .padding(horizontal = 28.dp, vertical = 5.dp),
-                    ) {
+                    val gap = i > 0 && paragraphs.any { it.first() == i }
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 28.dp).padding(top = if (gap) 18.dp else 4.dp, bottom = 4.dp)) {
                         Text(
-                            (if (first && text.translated) "　　" else "") + line.original, fontFamily = Serif, fontSize = 19.sp, lineHeight = 32.sp,
+                            line.original, fontFamily = Serif, fontSize = 19.sp, lineHeight = 32.sp,
                             color = if (i in spot.marked) accent else MaterialTheme.colorScheme.onSurface,
                         )
-                        if (shown && line.translation.isNotEmpty()) Text(line.translation, color = muted, fontSize = 15.sp, lineHeight = 24.sp, modifier = Modifier.padding(top = 2.dp, bottom = 4.dp))
+                        if (line.translation.isNotEmpty()) Text(line.translation, color = muted, fontSize = 15.sp, lineHeight = 24.sp, modifier = Modifier.padding(top = 2.dp))
                     }
                 }
+                else items(paragraphs.size) { p -> Paragraph(text, paragraphs[p], spot.marked, open) }
                 if (text.translated) item {
                     Text(
                         "译文为本应用逐句整理的参考今译，不是教材官方译文。", color = muted, fontSize = 11.sp,
@@ -113,6 +119,44 @@ fun TextScreen(app: AppState, spot: TextSpot, onClose: () -> Unit) {
                     )
                 }
             }
+        }
+    }
+}
+
+/** 一段原文连排。点到哪句就展开哪句的译文，译文按句序列在本段下面。 */
+@Composable
+private fun Paragraph(text: WenyanText, indices: List<Int>, marked: Set<Int>, open: SnapshotStateList<Int>) {
+    val accent = MaterialTheme.colorScheme.primary
+    val tint = accent.copy(alpha = 0.1f)
+    var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    // 每句在本段字符串里的起点；段首两个全角空格。
+    val starts = remember(indices) { indices.runningFold(2) { at, i -> at + text.lines[i].original.length }.dropLast(1) }
+    val body = buildAnnotatedString {
+        append("\u3000\u3000")
+        indices.forEach { i ->
+            withStyle(SpanStyle(color = if (i in marked) accent else Color.Unspecified, background = if (i in open) tint else Color.Unspecified)) {
+                append(text.lines[i].original)
+            }
+        }
+    }
+    Column(Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 8.dp)) {
+        Text(
+            body, fontFamily = Serif, fontSize = 19.sp, lineHeight = 34.sp, onTextLayout = { layout = it },
+            modifier = Modifier.pointerInput(indices) {
+                detectTapGestures { pos ->
+                    val offset = layout?.getOffsetForPosition(pos) ?: return@detectTapGestures
+                    val i = indices[starts.indexOfLast { it <= offset }.coerceAtLeast(0)]
+                    if (i in open) open.remove(i) else open.add(i)
+                }
+            },
+        )
+        val shown = indices.filter { it in open }
+        if (shown.isNotEmpty()) Column(
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(top = 6.dp).fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainer, RoundedCornerShape(10.dp)).padding(horizontal = 14.dp, vertical = 10.dp),
+        ) {
+            shown.forEach { Text(text.lines[it].translation, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 15.sp, lineHeight = 24.sp) }
         }
     }
 }
