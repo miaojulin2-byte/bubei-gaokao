@@ -50,6 +50,9 @@ class AppState(val context: Context) {
     /** 正在读的课文（从搜索或例句进来）。 */
     var reading by mutableStateOf<TextSpot?>(null)
 
+    /** 书库里打开的书。 */
+    var book by mutableStateOf<Shelf?>(null)
+
     /** 正在看的本子。 */
     var notebook by mutableStateOf<Long?>(null)
     /** 今天某科的首页风景。三科错开取图，同一天三科的图各不相同，每天轮换。 */

@@ -1,5 +1,13 @@
 package cn.bubei.gaokao.ui
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.ui.text.style.TextOverflow
+import cn.bubei.gaokao.data.Card
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -94,6 +102,16 @@ private fun books(subject: Subject, decks: List<DeckProgress>): List<Book> = whe
     }
 }
 
+/** 书库里打开的一本书：科目、书名和它包含的分册或章节。 */
+class Shelf(val subject: Subject, val title: String, val decks: List<String>)
+
+/** 把分册或章节加入或移出新学范围；至少留一个。 */
+private fun selectDecks(app: AppState, subject: Subject, ids: Set<String>, on: Boolean) {
+    val all = app.planner(subject).decks().filter { it.selected }.map { it.deck.id }.toMutableSet()
+    if (on) all += ids else all -= ids
+    if (all.isNotEmpty()) { app.store.setDecks(subject, all); app.changed() }
+}
+
 /** 书库：当前科目的计划和各册书，对应不背单词的“我的词书”。 */
 @Composable
 fun BooksScreen(app: AppState) {
@@ -106,13 +124,8 @@ fun BooksScreen(app: AppState) {
     val perDay = overview.newPerDay
     val daysLeft = if (perDay == 0) null else (overview.unlearnedInScope + perDay - 1) / perDay
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    var expanded by remember(subject) { mutableStateOf<String?>(null) }
 
-    fun select(ids: Set<String>, on: Boolean) {
-        val all = decks.filter { it.selected }.map { it.deck.id }.toMutableSet()
-        if (on) all += ids else all -= ids
-        if (all.isNotEmpty()) { app.store.setDecks(subject, all); app.changed() }
-    }
+    fun select(ids: Set<String>, on: Boolean) = selectDecks(app, subject, ids, on)
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = WindowInsets.navigationBars.asPaddingValues()) {
         item {
@@ -171,38 +184,68 @@ fun BooksScreen(app: AppState) {
             val state = when (selected) { 0 -> ToggleableState.Off; book.decks.size -> ToggleableState.On; else -> ToggleableState.Indeterminate }
             val chapters = book.decks.size > 1
             val toggle = { select(book.decks.map { it.deck.id }.toSet(), state != ToggleableState.On) }
+            // 点书打开这本书的卡片；右边的勾选框管它在不在新学范围里。
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().clickable {
-                    if (chapters) expanded = if (expanded == book.title) null else book.title else toggle()
-                }.padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
+                modifier = Modifier.fillMaxWidth().clickable { app.book = Shelf(subject, book.title, book.decks.map { it.deck.id }) }
+                    .padding(start = 20.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
             ) {
                 CoverView(book.cover, 58.dp)
                 Column(Modifier.weight(1f).padding(start = 16.dp, end = 8.dp)) {
                     Text(book.title, fontSize = 16.sp, fontWeight = FontWeight.Medium)
                     Text(
-                        if (chapters) "${book.decks.size} 章  " + if (expanded == book.title) "▴" else "▾" else book.cover.volume.ifEmpty { " " },
+                        (if (chapters) "${book.decks.size} 章" else book.cover.volume.ifEmpty { "${book.count} ${subject.unit}" }) + "  ›",
                         color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 2.dp),
                     )
                     Progress(book.learned, book.count)
                 }
                 TriStateCheckbox(state, onClick = toggle)
             }
-            if (expanded == book.title) book.decks.forEach { d ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().clickable { select(setOf(d.deck.id), !d.selected) }
-                        .padding(start = 94.dp, end = 8.dp, top = 2.dp, bottom = 2.dp),
-                ) {
-                    Column(Modifier.weight(1f).padding(end = 8.dp)) {
-                        Text(d.deck.title.substringAfter(" · "), fontSize = 14.sp)
-                        Progress(d.learned, d.deck.count)
-                    }
-                    Checkbox(checked = d.selected, onCheckedChange = { select(setOf(d.deck.id), it) })
-                }
-            }
         }
         item { Spacer(Modifier.height(24.dp)) }
+    }
+}
+
+/**
+ * 一本书的卡片：按章分组（只有一章就不分），每章标题行带勾选框管新学范围。
+ * 卡片后面标“已学”的是学过的，点开看详情。
+ */
+@Composable
+fun BookPage(app: AppState, shelf: Shelf, onOpen: (Card) -> Unit) {
+    BackHandler { app.book = null }
+    @Suppress("UNUSED_EXPRESSION") app.version
+    val content = app.content(shelf.subject)
+    val progress = app.planner(shelf.subject).decks().associateBy { it.deck.id }
+    val learned = remember(app.version, shelf) { app.store.memories(shelf.subject).keys }
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding()) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)) {
+            IconButton(onClick = { app.book = null }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回") }
+            Text(shelf.title, fontSize = 17.sp, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = WindowInsets.navigationBars.asPaddingValues()) {
+            shelf.decks.forEach { id ->
+                val d = progress[id] ?: return@forEach
+                item(key = "deck-$id") {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceContainer)
+                            .clickable { selectDecks(app, shelf.subject, setOf(id), !d.selected) }
+                            .padding(start = 20.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
+                    ) {
+                        Column(Modifier.weight(1f).padding(end = 8.dp)) {
+                            Text(if (shelf.decks.size > 1) d.deck.title.substringAfter(" · ") else "加入新学范围", fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                            Progress(d.learned, d.deck.count)
+                        }
+                        Checkbox(checked = d.selected, onCheckedChange = { selectDecks(app, shelf.subject, setOf(id), it) })
+                    }
+                }
+                items(content.inDeck(id), key = { it.id }) { card ->
+                    CardRow(app, card, onOpen, note = if (card.id in learned) "已学" else "")
+                }
+            }
+            item { Text("勾选的章节会排进每日新学", color = muted, fontSize = 12.sp, modifier = Modifier.padding(20.dp)) }
+        }
     }
 }
 

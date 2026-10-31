@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import cn.bubei.gaokao.data.Card
 import cn.bubei.gaokao.data.Passage
 import cn.bubei.gaokao.ui.AppState
+import cn.bubei.gaokao.ui.BookPage
 import cn.bubei.gaokao.ui.BooksScreen
 import cn.bubei.gaokao.ui.CalendarPage
 import cn.bubei.gaokao.ui.CardDetail
@@ -51,6 +52,7 @@ class MainActivity : ComponentActivity() {
                     Sheet(app.tab == Tab.ME, "我的", onClose = { app.tab = Tab.HOME }) { MeScreen(app) }
                     Sheet(app.page == Page.NOTEBOOKS, "我的本子", onClose = { app.page = null }) { NotebooksScreen(app) }
                     Overlay(app.notebook, from = Edge.END) { NotebookPage(app, it) { card -> detail = card to 0 } }
+                    Overlay(app.book, from = Edge.END) { BookPage(app, it) { card -> detail = card to 0 } }
                     Overlay(if (app.page == Page.CALENDAR) Unit else null, from = Edge.END) { CalendarPage(app) }
                     Overlay(app.session) { StudyScreen(app, it) }
                     // 搜索在学习页之上，学习、复习中途也能搜；从搜索点开的卡片和课文再盖在搜索上。

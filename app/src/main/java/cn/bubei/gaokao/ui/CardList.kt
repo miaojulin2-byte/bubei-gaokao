@@ -201,31 +201,36 @@ fun Empty(text: String) {
 
 @Composable
 fun CardList(app: AppState, cards: List<Card>, onOpen: (Card) -> Unit, header: LazyListScope.() -> Unit = {}) {
-    val muted = MaterialTheme.colorScheme.onSurfaceVariant
     LazyColumn(Modifier.fillMaxSize()) {
         header()
-        items(cards, key = { it.id }) { card ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().clickable { onOpen(card) }.padding(horizontal = 20.dp, vertical = 12.dp),
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            card.title(), fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                            fontFamily = if (card.subject == Subject.BIOLOGY) null else Serif, modifier = Modifier.weight(1f, fill = false),
-                        )
-                        Text(
-                            card.subject.short, color = card.subject.accent(false), fontSize = 11.sp,
-                            modifier = Modifier.padding(start = 8.dp).clip(RoundedCornerShape(4.dp))
-                                .background(card.subject.accent(false).copy(alpha = 0.1f)).padding(horizontal = 5.dp, vertical = 1.dp),
-                        )
-                    }
-                    Text(card.summary(), color = muted, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp))
-                }
-                SaveButton(app, card)
-            }
-            HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
-        }
+        items(cards, key = { it.id }) { card -> CardRow(app, card, onOpen) }
     }
+}
+
+/** 卡片列表的一行：标题、科目、摘要，右边是放进本子的按钮。note 是标题后的灰字，如“已学”。 */
+@Composable
+fun CardRow(app: AppState, card: Card, onOpen: (Card) -> Unit, note: String? = null) {
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth().clickable { onOpen(card) }.padding(horizontal = 20.dp, vertical = 12.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    card.title(), fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    fontFamily = if (card.subject == Subject.BIOLOGY) null else Serif, modifier = Modifier.weight(1f, fill = false),
+                )
+                if (note == null) Text(
+                    card.subject.short, color = card.subject.accent(false), fontSize = 11.sp,
+                    modifier = Modifier.padding(start = 8.dp).clip(RoundedCornerShape(4.dp))
+                        .background(card.subject.accent(false).copy(alpha = 0.1f)).padding(horizontal = 5.dp, vertical = 1.dp),
+                )
+                else if (note.isNotEmpty()) Text(note, color = muted, fontSize = 11.sp, modifier = Modifier.padding(start = 8.dp))
+            }
+            Text(card.summary(), color = muted, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp))
+        }
+        SaveButton(app, card)
+    }
+    HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
 }

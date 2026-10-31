@@ -24,7 +24,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -68,7 +67,6 @@ fun StudyScreen(app: AppState, session: Session) {
                 "${session.finished}/${session.total}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp,
                 modifier = Modifier.padding(start = 14.dp, end = 4.dp),
             )
-            IconButton(onClick = { app.page = Page.SEARCH }) { Icon(Icons.Default.Search, contentDescription = "搜索") }
             session.current?.let { SaveButton(app, it) }
         }
         if (card == null) {
@@ -76,7 +74,7 @@ fun StudyScreen(app: AppState, session: Session) {
             return@Column
         }
         val exampleIndex = session.memoryOf(card)?.reps ?: 0
-        Box(Modifier.weight(1f).fillMaxWidth()) {
+        PullToSearch({ app.page = Page.SEARCH }, Modifier.weight(1f).fillMaxWidth()) {
             Column(
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -167,11 +165,12 @@ fun CardDetail(app: AppState, card: cn.bubei.gaokao.data.Card, exampleIndex: Int
         Row(Modifier.fillMaxWidth().padding(8.dp)) {
             IconButton(onClick = onClose) { Icon(Icons.Default.Close, contentDescription = "关闭") }
             Spacer(Modifier.weight(1f))
-            IconButton(onClick = { onClose(); app.page = Page.SEARCH }) { Icon(Icons.Default.Search, contentDescription = "搜索") }
             SaveButton(app, card)
         }
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp).padding(bottom = 32.dp)) {
-            CardBack(card, exampleIndex, onOpenText = { app.reading = it })
+        PullToSearch({ onClose(); app.page = Page.SEARCH }) {
+            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp).padding(bottom = 32.dp)) {
+                CardBack(card, exampleIndex, onOpenText = { app.reading = it })
+            }
         }
     }
 }

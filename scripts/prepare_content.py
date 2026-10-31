@@ -244,6 +244,12 @@ def gushi(src):
         })
     cards.sort(key=lambda c: (DICTATION_DECKS.index(c["d"]), c["o"]))
     write("gushi.json", {"decks": decks_in(cards, DICTATION_DECKS), "cards": cards})
+    # 题目出处的全文，答案页“看全文”用。按默写粒度一句一行，没有译文。
+    titles = list(dict.fromkeys(c["t"] for card in cards for c in card["ctx"] if c))
+    write("gushi-texts.json", {"texts": [
+        {"id": f"gushi-{n}", "t": t, "a": re.sub(r"^\[.*?\]", "", texts[t][0]), "v": "", "p": [[[u, ""] for u in texts[t][1]]]}
+        for n, t in enumerate(titles)
+    ]})
     return len(cards), texts
 
 

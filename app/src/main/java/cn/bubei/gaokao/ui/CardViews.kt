@@ -92,7 +92,7 @@ fun CardFront(card: Card, exampleIndex: Int, hint: Boolean, onChoose: (Int) -> U
                 HintBox {
                     val meaning = card.exampleFor(exampleIndex)?.meaning.orEmpty()
                     if (meaning.isNotEmpty()) Text("这里的意思以「${meaning.take(1)}」开头，共 ${meaning.length} 字", color = muted, fontSize = 14.sp)
-                    ExampleTranslation(card, exampleIndex, onOpenText)
+                    ExampleTranslation(exampleSpot(card.exampleFor(exampleIndex)), Modifier.padding(top = 8.dp))
                     others.forEach { Text(highlight(it.sentence, card.word, accent), fontFamily = Serif, fontSize = 15.sp, lineHeight = 24.sp, modifier = Modifier.padding(top = 8.dp)) }
                 }
             }
@@ -139,8 +139,9 @@ fun CardBack(card: Card, exampleIndex: Int, picked: Int? = null, onOpenText: ((T
             if (ex != null) {
                 Text(ex.meaning.ifEmpty { card.gloss }, color = accent, fontSize = 22.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 14.dp))
                 Text(highlight(ex.sentence, card.word, accent), fontFamily = Serif, fontSize = 17.sp, lineHeight = 28.sp, modifier = Modifier.padding(top = 10.dp))
-                Text("《${ex.title}》", color = muted, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
-                ExampleTranslation(card, exampleIndex, onOpenText)
+                val spot = exampleSpot(ex)
+                SourceTitle("《${ex.title}》", spot, onOpenText, Modifier.padding(top = 4.dp))
+                ExampleTranslation(spot, Modifier.padding(top = 10.dp))
             }
             if (card.gloss != ex?.meaning) {
                 Section("义项")
@@ -159,7 +160,7 @@ fun CardBack(card: Card, exampleIndex: Int, picked: Int? = null, onOpenText: ((T
             SourceTag(card.source)
             Spacer(Modifier.height(20.dp))
             Text(dictationStem(card, filled = card.answers[0], hint = false, color = accent), fontSize = 19.sp, lineHeight = 34.sp)
-            card.contexts[0]?.let { PassageView(it, card.answers[0]) }
+            card.contexts[0]?.let { PassageView(it, card.answers[0], onOpenText) }
                 ?: Text("原文不在本应用的篇目库中（课外或初中篇目）", color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 16.dp))
             if (card.note.isNotEmpty()) Text(card.note, color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
             if (card.answers.size > 1) {
@@ -178,6 +179,7 @@ fun CardBack(card: Card, exampleIndex: Int, picked: Int? = null, onOpenText: ((T
             card.options.forEachIndexed { i, option -> OptionRow(card, i, option, picked = picked ?: card.answer, onClick = null) }
             Section(if (picked == null) "解析" else if (picked == card.answer) "答对了 · 解析" else "答错了 · 解析")
             Text(card.explanation, fontSize = 15.sp, lineHeight = 26.sp, modifier = Modifier.padding(top = 6.dp))
+            if (card.subject == cn.bubei.gaokao.data.Subject.WENYAN) QuotedSources(card, onOpenText) { Section("课文原句") }
         }
         is Card.Cloze -> Column(modifier = Modifier.fillMaxWidth()) {
             Text(card.deck.substringAfter(" · "), color = muted, fontSize = 13.sp)
@@ -209,10 +211,13 @@ fun dictationStem(card: Card.Dictation, filled: List<String>?, hint: Boolean, co
 
 /** 原文前后文：答案句着色，前后各一句淡色。 */
 @Composable
-fun PassageView(passage: Passage, answer: List<String>) {
+fun PassageView(passage: Passage, answer: List<String>, onOpenText: ((TextSpot) -> Unit)? = null) {
     val accent = MaterialTheme.colorScheme.primary
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Section("${passage.author}《${passage.title}》")
+    // 出处能对上全文时可点，打开全文并标出答案句。
+    Spacer(Modifier.height(24.dp))
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    SourceTitle("${passage.author}《${passage.title}》", passageSpot(passage), onOpenText, Modifier.padding(top = 14.dp, bottom = 2.dp))
     Text(
         buildAnnotatedString {
             if (passage.before.isNotEmpty()) withStyle(SpanStyle(color = muted)) { append(passage.before) }

@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,10 +34,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.bubei.gaokao.data.Card
+import cn.bubei.gaokao.data.Example
+import cn.bubei.gaokao.data.Passage
 import cn.bubei.gaokao.data.TextSpot
 import cn.bubei.gaokao.data.Texts
 
@@ -53,7 +55,7 @@ fun TextScreen(app: AppState, spot: TextSpot, onClose: () -> Unit) {
     val accent = MaterialTheme.colorScheme.primary
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     var all by rememberSaveable { mutableStateOf(false) }
-    val open: SnapshotStateList<Int> = remember(spot) { spot.range.toList().toMutableStateList() }
+    val open: SnapshotStateList<Int> = remember(spot) { spot.marked.toMutableStateList() }
     // 每句一项；段首前插一项空白作段距。第 0 项是篇名。
     val rows = remember(text) {
         buildList {
@@ -71,64 +73,99 @@ fun TextScreen(app: AppState, spot: TextSpot, onClose: () -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)) {
             IconButton(onClick = onClose) { Icon(Icons.Default.Close, contentDescription = "关闭") }
             Text(text.title, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            Text(
+            if (text.translated) Text(
                 if (all) "收起译文" else "全部译文", fontSize = 14.sp,
                 color = if (all) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.clip(RoundedCornerShape(50))
                     .background(if (all) accent else MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable { all = !all; if (!all) open.clear() }.padding(horizontal = 12.dp, vertical = 6.dp),
             )
-            IconButton(onClick = { onClose(); app.page = Page.SEARCH }) { Icon(Icons.Default.Search, contentDescription = "搜索") }
         }
-        LazyColumn(Modifier.fillMaxSize(), state = list) {
-            item {
-                Column(Modifier.padding(horizontal = 28.dp).padding(top = 12.dp, bottom = 8.dp)) {
-                    Text(text.title, fontFamily = Serif, fontSize = 26.sp)
-                    Text("${text.author}  ·  ${text.volume}", color = muted, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
-                    Text("点一句看这一句的译文", color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 14.dp))
+        PullToSearch({ onClose(); app.page = Page.SEARCH }) {
+            LazyColumn(Modifier.fillMaxSize(), state = list) {
+                item {
+                    Column(Modifier.padding(horizontal = 28.dp).padding(top = 12.dp, bottom = 8.dp)) {
+                        Text(text.title, fontFamily = Serif, fontSize = 26.sp)
+                        Text(listOf(text.author, text.volume).filter { it.isNotEmpty() }.joinToString("  ·  "), color = muted, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+                        if (text.translated) Text("点一句看这一句的译文", color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 14.dp))
+                    }
                 }
-            }
-            items(rows.size) { r ->
-                val (i, first, gap) = rows[r]
-                val line = text.lines[i]
-                val shown = all || i in open
-                if (gap) Spacer(Modifier.height(14.dp))
-                Column(
-                    Modifier.fillMaxWidth().clickable { if (i in open) open.remove(i) else open.add(i) }
-                        .padding(horizontal = 28.dp, vertical = 5.dp),
-                ) {
+                items(rows.size) { r ->
+                    val (i, first, gap) = rows[r]
+                    val line = text.lines[i]
+                    val shown = all || i in open
+                    if (gap) Spacer(Modifier.height(14.dp))
+                    Column(
+                        Modifier.fillMaxWidth().clickable(enabled = text.translated) { if (i in open) open.remove(i) else open.add(i) }
+                            .padding(horizontal = 28.dp, vertical = 5.dp),
+                    ) {
+                        Text(
+                            (if (first && text.translated) "　　" else "") + line.original, fontFamily = Serif, fontSize = 19.sp, lineHeight = 32.sp,
+                            color = if (i in spot.marked) accent else MaterialTheme.colorScheme.onSurface,
+                        )
+                        if (shown && line.translation.isNotEmpty()) Text(line.translation, color = muted, fontSize = 15.sp, lineHeight = 24.sp, modifier = Modifier.padding(top = 2.dp, bottom = 4.dp))
+                    }
+                }
+                if (text.translated) item {
                     Text(
-                        (if (first) "　　" else "") + line.original, fontFamily = Serif, fontSize = 19.sp, lineHeight = 32.sp,
-                        color = if (i in spot.range) accent else MaterialTheme.colorScheme.onSurface,
+                        "译文为本应用逐句整理的参考今译，不是教材官方译文。", color = muted, fontSize = 11.sp,
+                        modifier = Modifier.padding(horizontal = 28.dp, vertical = 28.dp),
                     )
-                    if (shown) Text(line.translation, color = muted, fontSize = 15.sp, lineHeight = 24.sp, modifier = Modifier.padding(top = 2.dp, bottom = 4.dp))
                 }
-            }
-            item {
-                Text(
-                    "译文为本应用逐句整理的参考今译，不是教材官方译文。", color = muted, fontSize = 11.sp,
-                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 28.dp),
-                )
             }
         }
     }
 }
 
-/** 文言例句的整句今译，以及跳到课文的入口。例句对不上课文时不显示。 */
+/** 例句在课文里的位置；对不上课文（课外、初中篇目）时为空。 */
 @Composable
-fun ExampleTranslation(card: Card.Word, exampleIndex: Int, onOpenText: ((TextSpot) -> Unit)?) {
+fun exampleSpot(ex: Example?): TextSpot? {
     val context = LocalContext.current
-    val ex = card.exampleFor(exampleIndex) ?: return
-    val spot = remember(ex) { Texts.locate(context, ex.title, ex.sentence) } ?: return
-    val muted = MaterialTheme.colorScheme.onSurfaceVariant
-    Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
-        Text(
-            spot.range.joinToString("") { spot.text.lines[it].translation },
-            color = muted, fontSize = 15.sp, lineHeight = 24.sp,
-        )
-        if (onOpenText != null) Text(
-            "看《${spot.text.title}》全文 ›", color = MaterialTheme.colorScheme.primary, fontSize = 13.sp,
-            modifier = Modifier.padding(top = 6.dp).clickable { onOpenText(spot) }.padding(vertical = 4.dp),
-        )
+    return remember(ex) { ex?.let { Texts.locate(context, it.title, it.sentence) } }
+}
+
+/** 文言例句的整句今译。 */
+@Composable
+fun ExampleTranslation(spot: TextSpot?, modifier: Modifier = Modifier) {
+    spot ?: return
+    Text(
+        spot.range.joinToString("") { spot.text.lines[it].translation },
+        color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 15.sp, lineHeight = 24.sp, modifier = modifier,
+    )
+}
+
+/** 出处《篇名》：能对上课文时着色加下划线，点了打开全文并标出这几句；对不上时是普通灰字。 */
+@Composable
+fun SourceTitle(label: String, spot: TextSpot?, onOpenText: ((TextSpot) -> Unit)?, modifier: Modifier = Modifier, fontSize: Int = 13) {
+    val link = spot != null && onOpenText != null
+    Text(
+        label, fontSize = fontSize.sp,
+        color = if (link) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        textDecoration = if (link) TextDecoration.Underline else null,
+        modifier = if (link) modifier.clickable { onOpenText!!(spot!!) } else modifier,
+    )
+}
+
+/** 选择题题干里引的课文原句和整句今译；同一篇的几句列在一起，下面一个可点的出处。 */
+@Composable
+fun QuotedSources(card: Card.Choice, onOpenText: ((TextSpot) -> Unit)?, header: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val spots = remember(card) { Texts.quotes(context, card.stem) }
+    if (spots.isEmpty()) return
+    header()
+    spots.groupBy { it.text }.forEach { (text, same) ->
+        same.forEach { spot ->
+            val lines = spot.range.map { text.lines[it] }
+            Text(lines.joinToString("") { it.original }, fontFamily = Serif, fontSize = 16.sp, lineHeight = 26.sp, modifier = Modifier.padding(top = 12.dp))
+            ExampleTranslation(spot)
+        }
+        SourceTitle("《${text.title}》", same[0].copy(also = same.drop(1).map { it.range }), onOpenText, Modifier.padding(top = 6.dp))
     }
+}
+
+/** 默写题答案在原文里的位置：出处是文言课文时用带译文的课文，否则用古诗文全文。 */
+@Composable
+fun passageSpot(passage: Passage): TextSpot? {
+    val context = LocalContext.current
+    return remember(passage) { Texts.locate(context, passage) }
 }
