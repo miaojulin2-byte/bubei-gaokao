@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import cn.bubei.gaokao.data.Card
 import cn.bubei.gaokao.data.Example
 import cn.bubei.gaokao.data.Passage
+import cn.bubei.gaokao.data.TextSpot
 
 /** 把句子里的目标词标出颜色。 */
 fun highlight(sentence: String, word: String, color: Color): AnnotatedString = buildAnnotatedString {
@@ -73,7 +74,7 @@ fun clozeText(card: Card.Cloze, revealed: Boolean, hint: Boolean, color: Color):
 private fun circled(n: Int) = if (n in 1..20) ('①' + (n - 1)).toString() else "($n)"
 
 @Composable
-fun CardFront(card: Card, exampleIndex: Int, hint: Boolean, onChoose: (Int) -> Unit = {}) {
+fun CardFront(card: Card, exampleIndex: Int, hint: Boolean, onChoose: (Int) -> Unit = {}, onOpenText: ((TextSpot) -> Unit)? = null) {
     val accent = MaterialTheme.colorScheme.primary
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     when (card) {
@@ -91,6 +92,7 @@ fun CardFront(card: Card, exampleIndex: Int, hint: Boolean, onChoose: (Int) -> U
                 HintBox {
                     val meaning = card.exampleFor(exampleIndex)?.meaning.orEmpty()
                     if (meaning.isNotEmpty()) Text("这里的意思以「${meaning.take(1)}」开头，共 ${meaning.length} 字", color = muted, fontSize = 14.sp)
+                    ExampleTranslation(card, exampleIndex, onOpenText)
                     others.forEach { Text(highlight(it.sentence, card.word, accent), fontFamily = Serif, fontSize = 15.sp, lineHeight = 24.sp, modifier = Modifier.padding(top = 8.dp)) }
                 }
             }
@@ -124,7 +126,7 @@ fun CardFront(card: Card, exampleIndex: Int, hint: Boolean, onChoose: (Int) -> U
 }
 
 @Composable
-fun CardBack(card: Card, exampleIndex: Int, picked: Int? = null) {
+fun CardBack(card: Card, exampleIndex: Int, picked: Int? = null, onOpenText: ((TextSpot) -> Unit)? = null) {
     val accent = MaterialTheme.colorScheme.primary
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     when (card) {
@@ -138,6 +140,7 @@ fun CardBack(card: Card, exampleIndex: Int, picked: Int? = null) {
                 Text(ex.meaning.ifEmpty { card.gloss }, color = accent, fontSize = 22.sp, fontWeight = FontWeight.Medium, modifier = Modifier.padding(top = 14.dp))
                 Text(highlight(ex.sentence, card.word, accent), fontFamily = Serif, fontSize = 17.sp, lineHeight = 28.sp, modifier = Modifier.padding(top = 10.dp))
                 Text("《${ex.title}》", color = muted, fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
+                ExampleTranslation(card, exampleIndex, onOpenText)
             }
             if (card.gloss != ex?.meaning) {
                 Section("义项")

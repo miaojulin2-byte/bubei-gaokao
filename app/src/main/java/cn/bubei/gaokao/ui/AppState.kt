@@ -11,6 +11,7 @@ import cn.bubei.gaokao.data.Planner
 import cn.bubei.gaokao.data.Session
 import cn.bubei.gaokao.data.Store
 import cn.bubei.gaokao.data.Subject
+import cn.bubei.gaokao.data.TextSpot
 import cn.bubei.gaokao.data.daysToGaokao
 import cn.bubei.gaokao.data.today
 
@@ -45,6 +46,9 @@ class AppState(val context: Context) {
 
     /** 正在选“放进哪个本子”的卡片。 */
     var saving by mutableStateOf<Card?>(null)
+
+    /** 正在读的课文（从搜索或例句进来）。 */
+    var reading by mutableStateOf<TextSpot?>(null)
 
     /** 正在看的本子。 */
     var notebook by mutableStateOf<Long?>(null)

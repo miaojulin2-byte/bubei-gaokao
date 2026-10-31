@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -67,6 +68,7 @@ fun StudyScreen(app: AppState, session: Session) {
                 "${session.finished}/${session.total}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp,
                 modifier = Modifier.padding(start = 14.dp, end = 4.dp),
             )
+            IconButton(onClick = { app.page = Page.SEARCH }) { Icon(Icons.Default.Search, contentDescription = "搜索") }
             session.current?.let { SaveButton(app, it) }
         }
         if (card == null) {
@@ -79,8 +81,8 @@ fun StudyScreen(app: AppState, session: Session) {
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                if (session.stage == Stage.BACK) CardBack(card, exampleIndex, session.picked)
-                else CardFront(card, exampleIndex, hint = session.stage == Stage.HINT, onChoose = { i -> app.act { choose(i) } })
+                if (session.stage == Stage.BACK) CardBack(card, exampleIndex, session.picked, onOpenText = { app.reading = it })
+                else CardFront(card, exampleIndex, hint = session.stage == Stage.HINT, onChoose = { i -> app.act { choose(i) } }, onOpenText = { app.reading = it })
             }
         }
         Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -165,10 +167,11 @@ fun CardDetail(app: AppState, card: cn.bubei.gaokao.data.Card, exampleIndex: Int
         Row(Modifier.fillMaxWidth().padding(8.dp)) {
             IconButton(onClick = onClose) { Icon(Icons.Default.Close, contentDescription = "关闭") }
             Spacer(Modifier.weight(1f))
+            IconButton(onClick = { onClose(); app.page = Page.SEARCH }) { Icon(Icons.Default.Search, contentDescription = "搜索") }
             SaveButton(app, card)
         }
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 28.dp).padding(bottom = 32.dp)) {
-            CardBack(card, exampleIndex)
+            CardBack(card, exampleIndex, onOpenText = { app.reading = it })
         }
     }
 }

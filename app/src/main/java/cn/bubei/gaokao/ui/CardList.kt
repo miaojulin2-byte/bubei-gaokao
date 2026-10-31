@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -46,6 +47,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cn.bubei.gaokao.data.Card
 import cn.bubei.gaokao.data.Subject
+import cn.bubei.gaokao.data.TextSpot
+import cn.bubei.gaokao.data.Texts
+import cn.bubei.gaokao.data.hanzi
 
 /** 列表里一张卡片的标题和摘要。 */
 private fun Card.title(): String = when (this) {
@@ -80,11 +84,36 @@ private fun search(app: AppState, query: String): List<Card> {
         .take(200)
 }
 
+/** 搜到的课文：篇名命中时 range 为空，否则是命中的那几句。 */
+private class TextHit(val spot: TextSpot, val byTitle: Boolean)
+
+/**
+ * 搜文言课文：篇名、原文（不论标点，可跨句）、译文关键词。
+ * 每篇先看篇名，再逐句找；一句也没中时把整篇连起来再找一次，接住跨句的引文。
+ */
+private fun searchTexts(app: AppState, query: String): List<TextHit> {
+    val q = query.trim()
+    if (q.isEmpty()) return emptyList()
+    val han = hanzi(q)
+    val titles = mutableListOf<TextHit>()
+    val lines = mutableListOf<TextHit>()
+    for (text in Texts.all(app.context)) {
+        if (text.title.contains(q) || (han.isNotEmpty() && hanzi(text.title).contains(han))) titles += TextHit(TextSpot(text, IntRange.EMPTY), true)
+        val before = lines.size
+        text.lines.forEachIndexed { i, line ->
+            if ((han.isNotEmpty() && hanzi(line.original).contains(han)) || line.translation.contains(q)) lines += TextHit(TextSpot(text, i..i), false)
+        }
+        if (lines.size == before) text.locate(q)?.let { lines += TextHit(TextSpot(text, it), false) }
+    }
+    return titles + lines.take(100)
+}
+
 @Composable
-fun SearchScreen(app: AppState, onOpen: (Card) -> Unit) {
+fun SearchScreen(app: AppState, onOpenText: (TextSpot) -> Unit, onOpen: (Card) -> Unit) {
     BackHandler { app.page = null }
     val query = app.searchQuery
     val results = remember(query) { search(app, query) }
+    val texts = remember(query) { searchTexts(app, query) }
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { if (query.isEmpty()) focus.requestFocus() }
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).statusBarsPadding().navigationBarsPadding().imePadding()) {
@@ -97,7 +126,7 @@ fun SearchScreen(app: AppState, onOpen: (Card) -> Unit) {
             ) {
                 Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(end = 8.dp))
                 Box(Modifier.weight(1f)) {
-                    if (query.isEmpty()) Text("字词、名句、知识点", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 16.sp)
+                    if (query.isEmpty()) Text("课文、原句、字词、知识点", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 16.sp)
                     BasicTextField(
                         query, { app.searchQuery = it }, singleLine = true,
                         textStyle = TextStyle(color = MaterialTheme.colorScheme.onSurface, fontSize = 16.sp),
@@ -112,9 +141,44 @@ fun SearchScreen(app: AppState, onOpen: (Card) -> Unit) {
                 )
             }
         }
-        if (query.isNotBlank() && results.isEmpty()) Empty("没有找到「${query.trim()}」")
-        CardList(app, results, onOpen)
+        if (query.isNotBlank() && results.isEmpty() && texts.isEmpty()) Empty("没有找到「${query.trim()}」")
+        CardList(app, results, onOpen) {
+            if (texts.isNotEmpty()) item { GroupLabel("课文 · ${texts.size}") }
+            items(texts.size) { TextHitRow(texts[it], query.trim()) { onOpenText(texts[it].spot) } }
+            if (texts.isNotEmpty() && results.isNotEmpty()) item { GroupLabel("卡片 · ${results.size}") }
+        }
     }
+}
+
+@Composable
+private fun GroupLabel(text: String) {
+    Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, modifier = Modifier.padding(start = 20.dp, top = 14.dp, bottom = 4.dp))
+}
+
+/** 篇名命中显示篇名和作者；句子命中显示原句（搜索词着色）和这句的译文。 */
+@Composable
+private fun TextHitRow(hit: TextHit, query: String, onClick: () -> Unit) {
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val accent = MaterialTheme.colorScheme.primary
+    val text = hit.spot.text
+    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 20.dp, vertical = 12.dp)) {
+        if (hit.byTitle) {
+            Text(highlight(text.title, query, accent), fontFamily = Serif, fontSize = 17.sp)
+            Text("${text.author}  ·  ${text.volume}  ·  ${text.lines.size} 句", color = muted, fontSize = 13.sp, modifier = Modifier.padding(top = 3.dp))
+        } else {
+            val lines = hit.spot.range.map { text.lines[it] }
+            Text(
+                highlight(lines.joinToString("") { it.original }, query, accent), fontFamily = Serif, fontSize = 16.sp, lineHeight = 26.sp,
+                maxLines = 3, overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                highlight(lines.joinToString("") { it.translation }, query, accent), color = muted, fontSize = 13.sp, lineHeight = 20.sp,
+                maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp),
+            )
+            Text("《${text.title}》", color = muted, fontSize = 12.sp, modifier = Modifier.padding(top = 3.dp))
+        }
+    }
+    HorizontalDivider(Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.outlineVariant)
 }
 
 val Subject.short get() = when (this) { Subject.WENYAN -> "文言"; Subject.GUSHI -> "古诗文"; Subject.BIOLOGY -> "生物" }
@@ -136,9 +200,10 @@ fun Empty(text: String) {
 }
 
 @Composable
-fun CardList(app: AppState, cards: List<Card>, onOpen: (Card) -> Unit) {
+fun CardList(app: AppState, cards: List<Card>, onOpen: (Card) -> Unit, header: LazyListScope.() -> Unit = {}) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     LazyColumn(Modifier.fillMaxSize()) {
+        header()
         items(cards, key = { it.id }) { card ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,

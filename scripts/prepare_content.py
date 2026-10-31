@@ -66,6 +66,55 @@ def wenyan(src):
     return len(all_cards)
 
 
+# 教材里的作者署名（旧库缺这一项）。
+AUTHORS = {
+    "quanxue": "荀子", "shishuo": "韩愈", "chibi-fu": "苏轼", "dengtaishan-ji": "姚鼐",
+    "zilu-zengxi": "《论语》", "qi-huan-jin-wen": "《孟子》", "paoding-jieniu": "《庄子》",
+    "zhuzhiwu": "《左传》", "hongmen-yan": "司马迁", "jianzhuke-shu": "李斯", "yuqi-shu": "林觉民",
+    "cuzhi": "蒲松龄", "jianshi-shisi-shu": "魏征", "da-sima-jianyi-shu": "王安石",
+    "epanggong-fu": "杜牧", "liuguo-lun": "苏洵", "lunyu-12": "《论语》", "daxue": "《礼记》",
+    "burenren": "《孟子》", "laozi-four": "《老子》", "wushi-zhi-hu": "《庄子》", "jianai": "《墨子》",
+    "quyuan-liezhuan": "司马迁", "suwu-zhuan": "班固", "guoqin-lun": "贾谊",
+    "wudai-lingguan-chuan-xu": "欧阳修", "chenqingbiao": "李密", "xiangjixuan-zhi": "归有光",
+    "lantingji-xu": "王羲之", "guiqulai-ci": "陶渊明", "guoshuo-guotuotuo-zhuan": "柳宗元",
+    "shizhongshan-ji": "苏轼",
+}
+
+
+def wenyan_texts(src):
+    """五册教材文言课文全文，逐句配今译（scripts/wenyan_translations/，一行对应一句）。
+
+    篇名标注“（《学而》）”“（第十一章）”和删节号“……”在旧库里粘在下一句开头，挪回上一句末尾，
+    这样分段位置（paragraph-layout.json 的字符偏移）正好落在句子边界上。
+    """
+    library = load(src / "wenyan/wenyan-library.json")["texts"]
+    layout = load(src / "wenyan/paragraph-layout.json")["texts"]
+    out = []
+    for t in library:
+        if t["id"] not in layout or t["volume"] not in WENYAN_ORDER:
+            continue
+        sentences = [s for sec in t["sections"] for p in sec["paragraphs"] for s in p["sentences"]]
+        lines = (ROOT / f"scripts/wenyan_translations/{t['id']}.txt").read_text(encoding="utf-8").splitlines()
+        assert len(lines) == len(sentences), t["id"]
+        for i in range(1, len(sentences)):
+            m = re.match(r"（[^）]*）|…+", sentences[i])
+            if m:
+                sentences[i - 1] += m.group()
+                sentences[i] = sentences[i][m.end():]
+        starts, pos, paragraphs = set(layout[t["id"]]["starts"]), 0, []
+        for s, tr in zip(sentences, lines):
+            # 《论语》《老子》每章单独成段，便于按章找。
+            if pos in starts or not paragraphs or re.search(r"（[^）]*[》章]）$", paragraphs[-1][-1][0]):
+                paragraphs.append([])
+            paragraphs[-1].append([s, tr])
+            pos += len(s)
+        key = t["id"].removeprefix("textbook-")
+        out.append({"id": t["id"], "t": t["title"], "a": AUTHORS[key], "v": t["volume"], "p": paragraphs})
+    out.sort(key=lambda t: WENYAN_ORDER.index(t["v"]))
+    write("wenyan-texts.json", {"texts": out})
+    return len(out)
+
+
 def wenyan_exam():
     """高考与广东模拟“词语解说”题：每个与课内例句比较的选项拆成一张判断题。"""
     out = []
@@ -268,7 +317,7 @@ def main():
     for n in range(len(SCENES)):
         shutil.copyfile(src / f"scenes/{n}.jpg", scene_dir / f"{n}.jpg")
     dictation, texts = gushi(src)
-    print("文言", wenyan(src), "古诗文默写", dictation, "生物", biology(src))
+    print("文言", wenyan(src), "课文", wenyan_texts(src), "古诗文默写", dictation, "生物", biology(src))
     scenes(texts)
 
 

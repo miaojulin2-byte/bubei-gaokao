@@ -31,6 +31,7 @@ import cn.bubei.gaokao.ui.NotebookPicker
 import cn.bubei.gaokao.ui.NotebooksScreen
 import cn.bubei.gaokao.ui.StudyScreen
 import cn.bubei.gaokao.ui.Tab
+import cn.bubei.gaokao.ui.TextScreen
 
 class MainActivity : ComponentActivity() {
     private lateinit var app: AppState
@@ -51,9 +52,13 @@ class MainActivity : ComponentActivity() {
                     Sheet(app.page == Page.NOTEBOOKS, "我的本子", onClose = { app.page = null }) { NotebooksScreen(app) }
                     Overlay(app.notebook, from = Edge.END) { NotebookPage(app, it) { card -> detail = card to 0 } }
                     Overlay(if (app.page == Page.CALENDAR) Unit else null, from = Edge.END) { CalendarPage(app) }
-                    Overlay(if (app.page == Page.SEARCH) Unit else null, from = Edge.TOP) { SearchScreen(app) { detail = it to 0 } }
                     Overlay(app.session) { StudyScreen(app, it) }
+                    // 搜索在学习页之上，学习、复习中途也能搜；从搜索点开的卡片和课文再盖在搜索上。
+                    Overlay(if (app.page == Page.SEARCH) Unit else null, from = Edge.TOP) {
+                        SearchScreen(app, onOpenText = { app.reading = it }) { detail = it to 0 }
+                    }
                     Overlay(detail) { (card, ex) -> CardDetail(app, card, ex) { detail = null } }
+                    Overlay(app.reading, from = Edge.END) { TextScreen(app, it) { app.reading = null } }
                     Overlay(passage) { PassageDetail(it) { passage = null } }
                     app.saving?.let { NotebookPicker(app, it) }
                 }
